@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+  <title>ScanDoc Dashboards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="navbar">
+    <div class="logo">🔍 ScanDoc Dashboards</div>
+    <div class="nav-controls">
+      <button class="nav-btn" id="btn-toggle-view">◫ Toggle View</button>
+      <button class="nav-btn" id="btn-import-modal">📥 Load Data</button>
+      <button class="nav-btn" id="btn-settings">⚙️ Settings</button>
+      <input type="file" id="file-upload" accept=".csv" style="display:none;" />
+      <input type="file" id="schema-upload" accept=".csv" style="display:none;" />
+    </div>
+  </header>
+
+  <!-- Main Dashboard Grid -->
+  <div class="dashboard-grid">
+    
+    <!-- Zone 1: Metrics -->
+    <section class="zone" id="zone-metrics">
+      <div class="metric-card pattern-bg">
+        <h3>Total Items</h3>
+        <p id="val-total-items">0</p>
+      </div>
+      <div class="metric-card warning-bg">
+        <h3>Unrecognized Items</h3>
+        <p id="val-unrecognized">0</p>
+      </div>
+      <div class="metric-card danger-bg">
+        <h3>Ignored Items</h3>
+        <p id="val-ignored">0</p>
+      </div>
+    </section>
+
+    <!-- Zone 2: Controls -->
+    <section class="zone" id="zone-controls">
+      <div class="control-group">
+        <label>Date Filter:</label>
+        <button class="filter-btn active" data-months="1">1 Month</button>
+        <button class="filter-btn" data-months="3">3 Months</button>
+        <button class="filter-btn" data-months="6">6 Months</button>
+        <button class="filter-btn" data-months="0">All Time</button>
+      </div>
+      <div class="control-group">
+        <label>Custom Range:</label>
+        <input type="date" id="date-start" />
+        <span>to</span>
+        <input type="date" id="date-end" />
+      </div>
+    </section>
+
+    <!-- Container for Zone 3 & 4 Layout -->
+    <div class="bottom-layout">
+      <!-- Zone 3: Data Grid -->
+      <section class="zone" id="zone-data">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <h4 style="margin: 0;">Active Data</h4>
+          <div class="action-bar">
+            <button class="action-btn-sm" id="btn-select-all">☑️ Select All</button>
+            <button class="action-btn-sm" id="btn-clear">🔲 Clear</button>
+            <button class="action-btn-sm" id="btn-csv-export">📥 CSV</button>
+            <button class="action-btn-sm" id="btn-json-export">{ } JSON</button>
+            <button class="action-btn-sm" id="btn-print">🖨️ Print</button>
+            <button class="action-btn-sm" id="btn-bulk-ignore" style="color: var(--warning-color); border-color: var(--warning-color);">🗑️ Ignore</button>
+          </div>
+        </div>
+        <div class="table-container resizable-container" style="flex: 2; margin-bottom: 20px;">
+          <table id="data-table">
+            <thead>
+              <tr id="table-headers">
+                <th style="width: 40px;">☑️</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr><td colspan="100%" style="text-align:center;">No data imported. Upload a CSV.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; margin-top: 5px;">
+          <h4 style="margin: 0; color: var(--warning-color);">Ignored Items</h4>
+          <div class="action-bar">
+            <button class="action-btn-sm" id="btn-select-all-ignored">☑️ Select All</button>
+            <button class="action-btn-sm" id="btn-clear-ignored">🔲 Clear</button>
+            <button class="action-btn-sm" id="btn-bulk-restore" style="color: #2ea043; border-color: #2ea043;">♻️ Restore</button>
+          </div>
+        </div>
+        <div class="table-container" style="flex: 1; border: 1px solid var(--border-color);">
+          <table id="ignored-table">
+            <thead>
+              <tr id="ignored-table-headers">
+                <th style="width: 40px;">☑️</th>
+              </tr>
+            </thead>
+            <tbody id="ignored-table-body">
+              <tr><td colspan="100%" style="text-align:center;">No ignored items.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Zone 4: Analytics -->
+      <section class="zone" id="zone-analytics">
+        <div class="chart-container" style="flex: 1; min-height: 0; padding-bottom: 10px;">
+          <canvas id="analytics-chart"></canvas>
+        </div>
+        <div class="chart-toolbar">
+          <button class="chart-toggle active" id="toggle-smooth">📈 Smooth</button>
+          <button class="chart-toggle active" id="toggle-grid">🔳 Gridlines</button>
+          <button class="chart-toggle" id="toggle-stacked">📊 Stacked</button>
+          <button class="chart-toggle active" id="toggle-fill">🎨 Fill Area</button>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- Import Modal (Hidden) -->
+  <div class="modal" id="import-modal">
+    <div class="modal-content" style="width: 400px; text-align: center;">
+      <h2>Select Data Source</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 20px;">Fetch your data from a local file or sync from the active cloud provider.</p>
+      
+      <button class="action-btn" id="btn-import-local" style="margin-bottom: 15px;">📁 Load Local CSV</button>
+      <button class="action-btn" id="btn-import-cloud" style="border-color: #2ea043; color: #2ea043;">☁️ Sync from Cloud</button>
+
+      <div class="modal-actions" style="margin-top: 2rem;">
+        <button class="nav-btn cancel" id="btn-close-import">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal (Hidden) -->
+  <div class="modal" id="settings-modal" style="align-items: flex-start; padding-top: 5vh; overflow-y: auto;">
+    <div class="modal-content" style="width: 700px; max-width: 95%; position: relative;">
+      <button class="nav-btn" id="btn-settings-help" style="position: absolute; top: 1.5rem; right: 1.5rem;">❓ Help Guide</button>
+
+      <!-- Cloud Settings Section -->
+      <h2 style="margin-bottom:5px;">Cloud Integration</h2>
+      <p style="color: #888; font-size:0.9rem; margin-bottom: 20px;">Select the active cloud provider and configure its connection.</p>
+      
+      <div class="cloud-providers">
+        <!-- Google -->
+        <label class="provider-card">
+          <div class="provider-header">
+            <input type="radio" name="active_cloud" value="google" id="cloud-google" />
+            <span style="font-weight: 600; font-size: 1.1rem; color: #fff;">Google Sheets</span>
+            <div class="tooltip-container">
+              <span class="help-icon">?</span>
+              <div class="tooltip-text">
+                <p><strong>Spreadsheet ID:</strong> Found in your Google Sheet URL between <code>/d/</code> and <code>/edit</code>.</p>
+                <p><strong>API Key:</strong> Go to Google Cloud Console, enable "Google Sheets API", then create an API Key under Credentials.</p>
+              </div>
+            </div>
+          </div>
+          <div class="provider-fields">
+            <input type="text" id="google-doc-id" placeholder="Spreadsheet ID (from URL)"/>
+            <input type="text" id="google-api-key" placeholder="Google API Key"/>
+          </div>
+        </label>
+
+        <!-- Microsoft -->
+        <label class="provider-card">
+          <div class="provider-header">
+            <input type="radio" name="active_cloud" value="microsoft" id="cloud-microsoft" />
+            <span style="font-weight: 600; font-size: 1.1rem; color: #fff;">Microsoft OneDrive / Excel</span>
+            <div class="tooltip-container">
+              <span class="help-icon">?</span>
+              <div class="tooltip-text">
+                <p><strong>Workbook ID:</strong> Extract from the Microsoft Graph Explorer or OneDrive file properties.</p>
+                <p><strong>Access Token:</strong> Generate a Bearer token via Azure AD OAuth 2.0 flow with <code>Files.Read.All</code> scopes.</p>
+              </div>
+            </div>
+          </div>
+          <div class="provider-fields">
+            <input type="text" id="ms-workbook-id" placeholder="Workbook/Item ID"/>
+            <input type="text" id="ms-access-token" placeholder="Graph API Access Token"/>
+          </div>
+        </label>
+
+        <!-- Airtable -->
+        <label class="provider-card">
+          <div class="provider-header">
+            <input type="radio" name="active_cloud" value="airtable" id="cloud-airtable" />
+            <span style="font-weight: 600; font-size: 1.1rem; color: #fff;">Airtable</span>
+            <div class="tooltip-container">
+              <span class="help-icon">?</span>
+              <div class="tooltip-text">
+                <p><strong>Base ID:</strong> Check your API docs (usually starts with <code>app</code>).</p>
+                <p><strong>Table Name:</strong> The exact case-sensitive name of the table tab.</p>
+                <p><strong>Access Token:</strong> Navigate to Airtable Developer Hub to create a Personal Access Token with <code>data.records:read</code> permissions.</p>
+              </div>
+            </div>
+          </div>
+          <div class="provider-fields">
+            <input type="text" id="airtable-base-id" placeholder="Base ID"/>
+            <input type="text" id="airtable-table-name" placeholder="Table Name"/>
+            <input type="password" id="airtable-api-key" placeholder="Personal Access Token"/>
+          </div>
+        </label>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;"/>
+
+      <!-- Schema Settings Section -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <h2>Schema Settings</h2>
+          <p style="color: #888; font-size:0.9rem; margin-bottom: 20px;">Define the expected columns to map your imported or synced data onto exactly.</p>
+        </div>
+        <button class="action-btn" id="btn-import-schema-csv" style="width: auto; margin-bottom: 20px; padding: 0.5rem 1rem;">📥 Import Headers (.csv)</button>
+      </div>
+      
+      <table class="schema-table">
+        <thead>
+          <tr>
+            <th>Column Name</th>
+            <th>Data Type</th>
+            <th style="width: 100px; text-align: center;">Visible</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="schema-body">
+          <!-- Schema configuration items loaded here -->
+        </tbody>
+      </table>
+      
+      <button class="action-btn" id="btn-add-schema-row">+ Add Column</button>
+
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;"/>
+
+      <!-- Analytics Settings Section -->
+      <h2>Analytics Configuration</h2>
+      <p style="color: #888; font-size:0.9rem; margin-bottom: 20px;">Design the Zone 4 Graph dynamically using the columns mapped above.</p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+        
+        <div>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Chart Type:</label>
+          <select id="analytics-type" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
+            <option value="line">Line Chart</option>
+            <option value="bar">Bar Chart</option>
+            <option value="doughnut">Doughnut Chart</option>
+            <option value="radar">Radar Chart</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">X-Axis Column:</label>
+          <select id="analytics-xaxis" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
+             <!-- Injected dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Y-Axis 1 Column:</label>
+          <select id="analytics-yaxis1" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
+             <!-- Injected dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Y-Axis 2 Column (Optional):</label>
+          <select id="analytics-yaxis2" style="width:100%; padding:0.5rem; margin-bottom:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
+             <option value="">-- None --</option>
+             <!-- Injected dynamically -->
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="nav-btn cancel" id="btn-close-settings">Cancel</button>
+        <button class="nav-btn" id="btn-save-settings">Save All Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal (Hidden) -->
+  <div class="modal" id="help-modal">
+    <div class="modal-content" style="max-width: 600px; line-height: 1.6; font-size: 0.95rem;">
+      <h2 style="margin-bottom: 1rem;">Google Sheets Access Guide</h2>
+      <p>If a Google Sheet is owned by someone else, how you access it depends entirely on <strong>how they shared it:</strong></p>
+      
+      <h3 style="margin-top: 1.5rem; color: var(--brand-color);">Scenario 1: Set to "Anyone with the link can view"</h3>
+      <p style="margin-bottom: 1rem; color: var(--text-secondary);">If the original owner made the document public via a link, it is extremely easy:</p>
+      <ul style="margin-left: 20px; margin-bottom: 1rem; color: var(--text-secondary);">
+        <li>You can use the <strong>Spreadsheet ID</strong> straight from their link.</li>
+        <li>You can use <strong>your own API Key</strong> (generated in your own Google Cloud Console).</li>
+        <li>The Google API will let your app read it flawlessly without needing any special permissions.</li>
+      </ul>
+
+      <h3 style="margin-top: 1.5rem; color: var(--warning-color);">Scenario 2: Shared specifically with your email</h3>
+      <p style="margin-bottom: 1rem; color: var(--text-secondary);">If it is a private document and restricted <em>only</em> to your specific Google Account, a simple API key won't work. API Keys identify Software, not People.</p>
+      <ul style="margin-left: 20px; color: var(--text-secondary);">
+        <li style="margin-bottom: 10px;"><strong>The Easy Way (Service Account):</strong> Tell the owner to explicitly share the document with a "Service Account Email" from your Google Cloud Console. This grants your app access directly.</li>
+        <li><strong>The Hard Way (OAuth 2.0):</strong> We would need to set up a full "Sign In With Google" popup. For an offline desktop app, we highly recommend the Easy Way.</li>
+      </ul>
+
+      <div class="modal-actions" style="margin-top: 2rem;">
+        <button class="nav-btn" id="btn-close-help">Okay, got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../node_modules/papaparse/papaparse.min.js"></script>
+  <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
