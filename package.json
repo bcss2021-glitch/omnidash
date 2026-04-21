@@ -1,6 +1,6 @@
 {
-  "name": "scandoc-dashboards",
-  "productName": "ScanDoc Dashboards",
+  "name": "omnidash",
+  "productName": "OmniDash",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": "src/index.js",

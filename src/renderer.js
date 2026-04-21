@@ -6,6 +6,17 @@ let schema = JSON.parse(localStorage.getItem('scandoc_schema')) || [
   { name: 'Status', type: 'string' }
 ];
 
+const btnInitDash = document.getElementById('btn-init-dash');
+if (btnInitDash) {
+  btnInitDash.addEventListener('click', () => {
+    const ts = document.getElementById('title-screen');
+    if (ts) {
+      ts.style.opacity = '0';
+      ts.style.visibility = 'hidden';
+    }
+  });
+}
+
 let cloudSettings = JSON.parse(localStorage.getItem('scandoc_cloud')) || {
   active: 'google',
   google: { authMode: 'api_key', docId: '', apiKey: '', serviceAccountJson: null },
@@ -298,7 +309,7 @@ btnExportSchemaConfig.addEventListener('click', () => {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([blobContent], { type: 'application/json' }));
   
-  const safeName = inputName ? inputName.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'scandoc';
+  const safeName = inputName ? inputName.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'omnidash';
   a.download = `${safeName}_workspace_backup.json`;
   a.click();
 
@@ -365,6 +376,15 @@ schemaConfigLoadInput.addEventListener('change', (e) => {
   reader.readAsText(file);
   e.target.value = '';
 });
+
+// About Modal Hook
+const btnAbout = document.getElementById('btn-about');
+const aboutModal = document.getElementById('about-modal');
+const btnCloseAbout = document.getElementById('btn-close-about');
+if (btnAbout && aboutModal && btnCloseAbout) {
+  btnAbout.addEventListener('click', () => aboutModal.classList.add('visible'));
+  btnCloseAbout.addEventListener('click', () => aboutModal.classList.remove('visible'));
+}
 
 // --- 2. IMPORT MANAGEMENT --- //
 btnImportModal.addEventListener('click', () => modalImport.classList.add('visible'));
@@ -506,20 +526,20 @@ document.getElementById('btn-csv-export').addEventListener('click', () => {
   const data = globalData.filter(r => !r._ignored && r._selected);
   if (data.length===0) return alert("Select items first.");
   const clean = data.map(r => { const o={...r}; delete o._id; delete o._ignored; delete o._selected; return o; });
-  downloadBlob(Papa.unparse(clean), "scandoc_export.csv", "text/csv");
+  downloadBlob(Papa.unparse(clean), "omnidash_export.csv", "text/csv");
 });
 
 document.getElementById('btn-json-export').addEventListener('click', () => {
   const data = globalData.filter(r => !r._ignored && r._selected);
   if (data.length===0) return alert("Select items first.");
   const clean = data.map(r => { const o={...r}; delete o._id; delete o._ignored; delete o._selected; return o; });
-  downloadBlob(JSON.stringify(clean, null, 2), "scandoc_export.json", "application/json");
+  downloadBlob(JSON.stringify(clean, null, 2), "omnidash_export.json", "application/json");
 });
 
 document.getElementById('btn-print').addEventListener('click', () => {
   const data = globalData.filter(r => !r._ignored && r._selected);
   if (data.length===0) return alert("Select items first.");
-  let html = '<html><head><title>Print Report</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background-color:#f2f2f2;}</style></head><body><h2>ScanDoc Selected Data</h2><table>';
+  let html = '<html><head><title>Print Report</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background-color:#f2f2f2;}</style></head><body><h2>OmniDash Selected Data</h2><table>';
   html += '<tr>' + schema.map(c => `<th>${c.name}</th>`).join('') + '</tr>';
   data.forEach(row => { html += '<tr>' + schema.map(c => `<td>${row[c.name]||''}</td>`).join('') + '</tr>'; });
   html += '</table><script>window.print();</sc'+'ript></body></html>';
