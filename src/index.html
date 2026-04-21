@@ -165,7 +165,17 @@
           </div>
           <div class="provider-fields">
             <input type="text" id="google-doc-id" placeholder="Spreadsheet ID (from URL)"/>
+            <div style="margin-top: 10px; margin-bottom: 10px; display: flex; gap: 15px;">
+              <span style="color: var(--text-secondary); font-size: 0.9rem;">Auth Mode:</span>
+              <label style="color: var(--text-primary); font-size: 0.9rem; cursor: pointer;"><input type="radio" name="google_auth_mode" value="api_key" checked /> API Key</label>
+              <label style="color: var(--text-primary); font-size: 0.9rem; cursor: pointer;"><input type="radio" name="google_auth_mode" value="service_account" /> Service Account</label>
+            </div>
             <input type="text" id="google-api-key" placeholder="Google API Key"/>
+            <div id="google-service-account-upload" style="display: none;">
+              <label style="display: block; color: var(--text-secondary); margin-bottom: 5px; font-size: 0.9rem;">Upload Service Account JSON:</label>
+              <input type="file" id="google-sa-file" accept=".json" style="background: var(--bg-color); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem; width: 100%; border-radius: 4px;" />
+              <div id="google-sa-status" style="margin-top: 5px; font-size: 0.85rem; color: #2ea043;"></div>
+            </div>
           </div>
         </label>
 
@@ -213,12 +223,18 @@
       <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;"/>
 
       <!-- Schema Settings Section -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
         <div>
           <h2>Schema Settings</h2>
-          <p style="color: #888; font-size:0.9rem; margin-bottom: 20px;">Define the expected columns to map your imported or synced data onto exactly.</p>
+          <p style="color: #888; font-size:0.9rem; margin-bottom: 0;">Define the expected columns to map your imported or synced data onto exactly.</p>
         </div>
-        <button class="action-btn" id="btn-import-schema-csv" style="width: auto; margin-bottom: 20px; padding: 0.5rem 1rem;">📥 Import Headers (.csv)</button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" id="workspace-name" placeholder="Name (e.g. Finance)" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0.4rem; width:140px;" />
+          <input type="file" id="schema-config-load" accept=".json" style="display:none;" />
+          <button class="nav-btn" id="btn-export-schema-config">💾 Backup Config</button>
+          <button class="nav-btn" id="btn-load-schema-config">📁 Load Config</button>
+          <button class="action-btn" id="btn-import-schema-csv" style="width: auto; padding: 0.5rem 1rem;">📥 Import Headers (.csv)</button>
+        </div>
       </div>
       
       <table class="schema-table">
@@ -278,16 +294,19 @@
         </div>
       </div>
 
-      <div class="modal-actions">
-        <button class="nav-btn cancel" id="btn-close-settings">Cancel</button>
-        <button class="nav-btn" id="btn-save-settings">Save All Settings</button>
+      <div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center;">
+        <span id="last-backup-date" style="color: var(--text-secondary); font-size: 0.85rem; margin-right: auto; padding-left: 10px;">Last Backup: Never</span>
+        <div>
+          <button class="nav-btn cancel" id="btn-close-settings">Cancel</button>
+          <button class="nav-btn" id="btn-save-settings">Save All Settings</button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Help Modal (Hidden) -->
-  <div class="modal" id="help-modal">
-    <div class="modal-content" style="max-width: 600px; line-height: 1.6; font-size: 0.95rem;">
+  <div class="modal" id="help-modal" style="align-items: flex-start; padding-top: 5vh; overflow-y: auto;">
+    <div class="modal-content" style="max-width: 600px; line-height: 1.5; font-size: 0.9rem;">
       <h2 style="margin-bottom: 1rem;">Google Sheets Access Guide</h2>
       <p>If a Google Sheet is owned by someone else, how you access it depends entirely on <strong>how they shared it:</strong></p>
       
@@ -299,11 +318,12 @@
         <li>The Google API will let your app read it flawlessly without needing any special permissions.</li>
       </ul>
 
-      <h3 style="margin-top: 1.5rem; color: var(--warning-color);">Scenario 2: Shared specifically with your email</h3>
-      <p style="margin-bottom: 1rem; color: var(--text-secondary);">If it is a private document and restricted <em>only</em> to your specific Google Account, a simple API key won't work. API Keys identify Software, not People.</p>
+      <h3 style="margin-top: 1.5rem; color: var(--warning-color);">Scenario 2: Shared specifically with your email (Private)</h3>
+      <p style="margin-bottom: 1rem; color: var(--text-secondary);">If it is a private document and restricted <em>only</em> to your specific Google Account, a simple API key won't work.</p>
       <ul style="margin-left: 20px; color: var(--text-secondary);">
-        <li style="margin-bottom: 10px;"><strong>The Easy Way (Service Account):</strong> Tell the owner to explicitly share the document with a "Service Account Email" from your Google Cloud Console. This grants your app access directly.</li>
-        <li><strong>The Hard Way (OAuth 2.0):</strong> We would need to set up a full "Sign In With Google" popup. For an offline desktop app, we highly recommend the Easy Way.</li>
+        <li style="margin-bottom: 10px;"><strong>What to do:</strong> Navigate to Google Cloud Console, find your project, and create a "Service Account".</li>
+        <li style="margin-bottom: 10px;">It will give you a robot email address. Tell the owner to "Share" their private Google Sheet explicitly with that robot email address.</li>
+        <li>Under "Keys" in Google Cloud for that Service Account, click "Create New Key" -> JSON. Choose the "Service Account" auth mode in this app, and upload that exact JSON file here. Our built-in secure engine will magically handle the rest!</li>
       </ul>
 
       <div class="modal-actions" style="margin-top: 2rem;">

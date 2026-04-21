@@ -8,7 +8,7 @@ let schema = JSON.parse(localStorage.getItem('scandoc_schema')) || [
 
 let cloudSettings = JSON.parse(localStorage.getItem('scandoc_cloud')) || {
   active: 'google',
-  google: { docId: '', apiKey: '' },
+  google: { authMode: 'api_key', docId: '', apiKey: '', serviceAccountJson: null },
   microsoft: { workbookId: '', token: '' },
   airtable: { baseId: '', tableName: '', apiKey: '' }
 };
@@ -61,6 +61,9 @@ const btnCloseSettings = document.getElementById('btn-close-settings');
 const btnSaveSettings = document.getElementById('btn-save-settings');
 const btnAddSchemaRow = document.getElementById('btn-add-schema-row');
 const btnImportSchemaCsv = document.getElementById('btn-import-schema-csv');
+const btnExportSchemaConfig = document.getElementById('btn-export-schema-config');
+const btnLoadSchemaConfig = document.getElementById('btn-load-schema-config');
+const schemaConfigLoadInput = document.getElementById('schema-config-load');
 
 const schemaBody = document.getElementById('schema-body');
 const tableHeaders = document.getElementById('table-headers');
@@ -70,6 +73,10 @@ const ignoredTableBody = document.getElementById('ignored-table-body');
 const valTotalItems = document.getElementById('val-total-items');
 const valUnrecognized = document.getElementById('val-unrecognized');
 const valIgnored = document.getElementById('val-ignored');
+
+const lastBackupDateSpan = document.getElementById('last-backup-date');
+let storedLastBackupDate = localStorage.getItem('scandoc_last_backup') || 'Never';
+if(lastBackupDateSpan) lastBackupDateSpan.innerText = 'Last Backup: ' + storedLastBackupDate;
 
 // --- 1. SETTINGS MANAGEMENT --- //
 function renderSchemaEditor() {
@@ -130,19 +137,57 @@ function loadSettingsToUI() {
   document.getElementById(`cloud-${cloudSettings.active}`).checked = true;
   document.getElementById('google-doc-id').value = cloudSettings.google.docId;
   document.getElementById('google-api-key').value = cloudSettings.google.apiKey;
+  const authMode = cloudSettings.google.authMode || 'api_key';
+  document.querySelector(`input[name="google_auth_mode"][value="${authMode}"]`).checked = true;
+  toggleGoogleAuthUI(authMode);
   document.getElementById('ms-workbook-id').value = cloudSettings.microsoft.workbookId;
   document.getElementById('ms-access-token').value = cloudSettings.microsoft.token;
   document.getElementById('airtable-base-id').value = cloudSettings.airtable.baseId;
   document.getElementById('airtable-table-name').value = cloudSettings.airtable.tableName;
   document.getElementById('airtable-api-key').value = cloudSettings.airtable.apiKey;
+  document.getElementById('workspace-name').value = localStorage.getItem('scandoc_workspace_name') || '';
 
   // Analytics Type
   document.getElementById('analytics-type').value = analyticsConfig.type;
 }
 
+function toggleGoogleAuthUI(mode) {
+  if (mode === 'api_key') {
+    document.getElementById('google-api-key').style.display = 'block';
+    document.getElementById('google-service-account-upload').style.display = 'none';
+  } else {
+    document.getElementById('google-api-key').style.display = 'none';
+    document.getElementById('google-service-account-upload').style.display = 'block';
+  }
+}
+
+document.querySelectorAll('input[name="google_auth_mode"]').forEach(radio => {
+  radio.addEventListener('change', (e) => toggleGoogleAuthUI(e.target.value));
+});
+
+let tempServiceAccountJson = null;
+
+document.getElementById('google-sa-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      tempServiceAccountJson = JSON.parse(event.target.result);
+      document.getElementById('google-sa-status').innerText = '✅ Valid JSON Loaded';
+      document.getElementById('google-sa-status').style.color = '#2ea043';
+    } catch (err) {
+      document.getElementById('google-sa-status').innerText = '❌ Invalid JSON File';
+      document.getElementById('google-sa-status').style.color = 'var(--danger-color)';
+    }
+  };
+  reader.readAsText(file);
+});
+
 btnAddSchemaRow.addEventListener('click', () => addSchemaRowToDOM());
 
 btnSettings.addEventListener('click', () => {
+  if (cloudSettings.google.serviceAccountJson) tempServiceAccountJson = cloudSettings.google.serviceAccountJson;
   renderSchemaEditor();
   loadSettingsToUI();
   modalSettings.classList.add('visible');
@@ -165,7 +210,12 @@ btnSaveSettings.addEventListener('click', () => {
 
   // Save Cloud
   cloudSettings.active = document.querySelector('input[name="active_cloud"]:checked').value;
-  cloudSettings.google = { docId: document.getElementById('google-doc-id').value.trim(), apiKey: document.getElementById('google-api-key').value.trim() };
+  cloudSettings.google = { 
+    authMode: document.querySelector('input[name="google_auth_mode"]:checked').value,
+    docId: document.getElementById('google-doc-id').value.trim(), 
+    apiKey: document.getElementById('google-api-key').value.trim(),
+    serviceAccountJson: tempServiceAccountJson
+  };
   cloudSettings.microsoft = { workbookId: document.getElementById('ms-workbook-id').value.trim(), token: document.getElementById('ms-access-token').value.trim() };
   cloudSettings.airtable = { baseId: document.getElementById('airtable-base-id').value.trim(), tableName: document.getElementById('airtable-table-name').value.trim(), apiKey: document.getElementById('airtable-api-key').value.trim() };
   localStorage.setItem('scandoc_cloud', JSON.stringify(cloudSettings));
@@ -201,6 +251,121 @@ schemaUploadInput.addEventListener('change', (e) => {
   });
 });
 
+// Schema Config Backup Hook
+btnExportSchemaConfig.addEventListener('click', () => {
+  const rows = schemaBody.querySelectorAll('.schema-row');
+  let currentEditorSchema = [];
+  rows.forEach(tr => {
+    const name = tr.querySelector('.schema-name').value.trim();
+    const type = tr.querySelector('.schema-type').value;
+    const visible = tr.querySelector('.schema-visible').checked;
+    if (name) currentEditorSchema.push({ name, type, visible });
+  });
+  
+  if (currentEditorSchema.length === 0) return alert("No columns to backup!");
+
+  const currentCloudActive = document.querySelector('input[name="active_cloud"]:checked').value;
+  const activeCloudConfig = {
+    active: currentCloudActive,
+    google: { 
+      authMode: document.querySelector('input[name="google_auth_mode"]:checked').value,
+      docId: document.getElementById('google-doc-id').value.trim(), 
+      apiKey: document.getElementById('google-api-key').value.trim(),
+      serviceAccountJson: tempServiceAccountJson
+    },
+    microsoft: { workbookId: document.getElementById('ms-workbook-id').value.trim(), token: document.getElementById('ms-access-token').value.trim() },
+    airtable: { baseId: document.getElementById('airtable-base-id').value.trim(), tableName: document.getElementById('airtable-table-name').value.trim(), apiKey: document.getElementById('airtable-api-key').value.trim() }
+  };
+  
+  const currentAnalyticsConfig = {
+    type: document.getElementById('analytics-type').value,
+    xAxis: document.getElementById('analytics-xaxis').value,
+    yAxis1: document.getElementById('analytics-yaxis1').value,
+    yAxis2: document.getElementById('analytics-yaxis2').value
+  };
+
+  const inputName = document.getElementById('workspace-name').value.trim();
+  localStorage.setItem('scandoc_workspace_name', inputName);
+
+  const fullWorkspace = {
+    workspaceName: inputName,
+    schema: currentEditorSchema,
+    cloud: activeCloudConfig,
+    analytics: currentAnalyticsConfig
+  };
+  
+  const blobContent = JSON.stringify(fullWorkspace, null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([blobContent], { type: 'application/json' }));
+  
+  const safeName = inputName ? inputName.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'scandoc';
+  a.download = `${safeName}_workspace_backup.json`;
+  a.click();
+
+  const now = new Date().toLocaleString();
+  localStorage.setItem('scandoc_last_backup', now);
+  if(document.getElementById('last-backup-date')) {
+    document.getElementById('last-backup-date').innerText = 'Last Backup: ' + now;
+  }
+});
+
+// Schema Config Load Hook
+btnLoadSchemaConfig.addEventListener('click', () => schemaConfigLoadInput.click());
+schemaConfigLoadInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const loaded = JSON.parse(event.target.result);
+      schemaBody.innerHTML = '';
+      
+      let loadedSchemaToUse = [];
+      
+      if (Array.isArray(loaded)) {
+        // Legacy array-only support
+        loadedSchemaToUse = loaded;
+      } else if (loaded && loaded.schema) {
+        // Full workspace context support
+        loadedSchemaToUse = loaded.schema;
+        if (loaded.cloud) {
+           cloudSettings = loaded.cloud; 
+           loadSettingsToUI();
+        }
+        if (loaded.analytics) {
+           analyticsConfig = loaded.analytics;
+           document.getElementById('analytics-type').value = analyticsConfig.type;
+        }
+      } else {
+        throw new Error("Invalid format");
+      }
+      
+      loadedSchemaToUse.forEach(col => addSchemaRowToDOM(col.name, col.type, col.visible !== false));
+      
+      if (!Array.isArray(loaded) && loaded.analytics) {
+         // Auto-select the newly injected axes
+         if (loaded.analytics.xAxis) document.getElementById('analytics-xaxis').value = loaded.analytics.xAxis;
+         if (loaded.analytics.yAxis1) document.getElementById('analytics-yaxis1').value = loaded.analytics.yAxis1;
+         if (loaded.analytics.yAxis2) document.getElementById('analytics-yaxis2').value = loaded.analytics.yAxis2;
+      }
+      
+      if (!Array.isArray(loaded) && loaded.workspaceName) {
+         document.getElementById('workspace-name').value = loaded.workspaceName;
+         localStorage.setItem('scandoc_workspace_name', loaded.workspaceName);
+      } else {
+         document.getElementById('workspace-name').value = '';
+         localStorage.setItem('scandoc_workspace_name', '');
+      }
+      
+      alert("Workspace loaded successfully! Don't forget to hit 'Save All Settings' below.");
+    } catch (err) {
+      alert("Failed to load config: Invalid file format.");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
 // --- 2. IMPORT MANAGEMENT --- //
 btnImportModal.addEventListener('click', () => modalImport.classList.add('visible'));
 btnCloseImport.addEventListener('click', () => modalImport.classList.remove('visible'));
@@ -217,13 +382,19 @@ btnImportCloud.addEventListener('click', async () => {
   modalImport.classList.remove('visible');
   const provider = cloudSettings.active;
   if (provider === 'google') {
-    const { docId, apiKey } = cloudSettings.google;
-    if (!docId || !apiKey) return alert("Please configure Google Sheet connection in Settings.");
+    const { authMode, docId, apiKey, serviceAccountJson } = cloudSettings.google;
+    if (!docId) return alert("Please specify Spreadsheet ID in Settings.");
+    if (authMode === 'api_key' && !apiKey) return alert("Please specify API Key in Settings.");
+    if (authMode === 'service_account' && !serviceAccountJson) return alert("Please upload Service Account JSON in Settings.");
+    
     try {
-      const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${docId}/values/A1:Z?key=${apiKey}`);
-      if (!response.ok) throw new Error(await response.text());
-      const rawJson = await response.json();
-      const rows = rawJson.values;
+      const currentAuthMode = authMode || 'api_key';
+      const rows = await window.googleApp.fetchGoogleSheet({
+        authMode: currentAuthMode,
+        docId,
+        apiKey,
+        serviceAccountJson
+      });
       if (!rows || rows.length < 2) return alert("Sheet has no data.");
       const headers = rows[0];
       let parsedData = [];

@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -49,3 +49,36 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+const { google } = require('googleapis');
+
+ipcMain.handle('fetch-google-sheet', async (event, config) => {
+  try {
+    const { authMode, docId, apiKey, serviceAccountJson } = config;
+    const sheets = google.sheets('v4');
+    
+    let authClient;
+    
+    if (authMode === 'api_key') {
+      authClient = apiKey;
+    } else if (authMode === 'service_account') {
+      const auth = new google.auth.GoogleAuth({
+        credentials: serviceAccountJson,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+      });
+      authClient = await auth.getClient();
+    } else {
+      throw new Error("Invalid auth mode specified.");
+    }
+    
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: docId,
+      range: 'A1:Z',
+      auth: authClient,
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Google Sheets API Error:', error);
+    throw new Error(error.message);
+  }
+});
