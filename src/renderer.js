@@ -69,6 +69,7 @@ const schemaUploadInput = document.getElementById('schema-upload');
 const btnCloseImport = document.getElementById('btn-close-import');
 const btnSettings = document.getElementById('btn-settings');
 const btnCloseSettings = document.getElementById('btn-close-settings');
+const btnCloseSettingsX = document.getElementById('btn-close-settings-x');
 const btnSaveSettings = document.getElementById('btn-save-settings');
 const btnAddSchemaRow = document.getElementById('btn-add-schema-row');
 const btnImportSchemaCsv = document.getElementById('btn-import-schema-csv');
@@ -201,10 +202,16 @@ btnSettings.addEventListener('click', () => {
   if (cloudSettings.google.serviceAccountJson) tempServiceAccountJson = cloudSettings.google.serviceAccountJson;
   renderSchemaEditor();
   loadSettingsToUI();
+
+  // Ensure all accordions are collapsed initially
+  document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('active'));
+  document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('active'));
+
   modalSettings.classList.add('visible');
 });
 
 btnCloseSettings.addEventListener('click', () => modalSettings.classList.remove('visible'));
+btnCloseSettingsX.addEventListener('click', () => modalSettings.classList.remove('visible'));
 
 btnSaveSettings.addEventListener('click', () => {
   // Save Schema
@@ -453,15 +460,6 @@ if (btnDownloadSelected) {
     a.download = `${selected}_workspace_backup.json`;
     a.click();
   });
-}
-
-// About Modal Hook
-const btnAbout = document.getElementById('btn-about');
-const aboutModal = document.getElementById('about-modal');
-const btnCloseAbout = document.getElementById('btn-close-about');
-if (btnAbout && aboutModal && btnCloseAbout) {
-  btnAbout.addEventListener('click', () => aboutModal.classList.add('visible'));
-  btnCloseAbout.addEventListener('click', () => aboutModal.classList.remove('visible'));
 }
 
 // --- 2. IMPORT MANAGEMENT --- //
