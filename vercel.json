@@ -1,7 +1,6 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    { "source": "/", "destination": "/src/index.html" },
-    { "source": "/(.*)", "destination": "/src/$1" }
-  ]
+  "framework": null,
+  "buildCommand": "echo 'No build step required'",
+  "outputDirectory": "src",
+  "cleanUrls": true
 }
