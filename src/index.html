@@ -12,10 +12,15 @@
 </head>
 <body>
   <!-- Title Screen Overlay -->
-  <div id="title-screen" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.7s ease, visibility 0.7s ease;">
-    <h1 style="font-size:5rem; color:#fff; margin-bottom:0.5rem; text-shadow:0 0 30px rgba(88,166,255,0.6);">🌌 OmniDash</h1>
-    <p style="color:var(--text-secondary); font-size:1.3rem; margin-bottom: 3rem; letter-spacing: 2px;">Multi-Purpose Data Engine</p>
-    <button class="nav-btn" id="btn-init-dash" style="font-size:1.2rem; padding:15px 40px; border-color:#58a6ff; color:#58a6ff; background:rgba(88,166,255,0.05); cursor:pointer;">START ENGINE</button>
+  <div id="title-screen" class="animated-bg" style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.7s ease, visibility 0.7s ease;">
+    <h1 style="font-size:5rem; color:#fff; margin-bottom:0.5rem; text-shadow:0 0 30px rgba(88,166,255,0.8);">🌌 OmniDash</h1>
+    <p style="color:var(--text-secondary); font-size:1.3rem; margin-bottom: 3rem; letter-spacing: 2px; text-shadow:0 0 10px rgba(0,0,0,0.5);">Multi-Purpose Data Engine</p>
+    
+    <div style="display: flex; gap: 20px;">
+      <button class="nav-btn" id="btn-resume-dash" style="display: none; font-size:1.2rem; padding:15px 40px; border-color:#2ea043; color:#2ea043; background:rgba(46, 160, 67, 0.05); cursor:pointer; box-shadow: 0 0 15px rgba(46, 160, 67, 0.2);">RESUME <span id="resume-workspace-name"></span></button>
+      <button class="nav-btn" id="btn-init-dash" style="font-size:1.2rem; padding:15px 40px; border-color:#58a6ff; color:#58a6ff; background:rgba(88,166,255,0.05); cursor:pointer; box-shadow: 0 0 15px rgba(88, 166, 255, 0.2);">START FRESH</button>
+    </div>
+    
     <div style="position:absolute; bottom:20px; right:25px; color:#666; font-size:0.9rem; font-style:italic; letter-spacing: 1px;">Created by MysticTechs</div>
   </div>
 
@@ -25,7 +30,14 @@
   <!-- Header -->
   <header class="navbar">
     <div class="logo">🌌 OmniDash</div>
-    <div class="nav-controls">
+    <div class="nav-controls" style="display: flex; align-items: center;">
+      <select id="quick-switcher" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0.4rem; margin-right: 10px; display: none;">
+        <option value="">Switch Workspace...</option>
+      </select>
+      <button class="nav-btn cancel" id="btn-exit-workspace" style="display: none; margin-right: 15px;">🚪 Exit</button>
+      
+      <div style="border-left: 1px solid var(--border-color); height: 25px; margin-right: 5px;"></div>
+      
       <button class="nav-btn" id="btn-toggle-view">◫ Toggle View</button>
       <button class="nav-btn" id="btn-import-modal">📥 Load Data</button>
       <button class="nav-btn" id="btn-settings">⚙️ Settings</button>
@@ -73,52 +85,86 @@
 
     <!-- Container for Zone 3 & 4 Layout -->
     <div class="bottom-layout">
-      <!-- Zone 3: Data Grid -->
+      <!-- Zone 3: Data Grid (Tabbed) -->
       <section class="zone" id="zone-data">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-          <h4 style="margin: 0;">Active Data</h4>
-          <div class="action-bar">
-            <button class="action-btn-sm" id="btn-select-all">☑️ Select All</button>
-            <button class="action-btn-sm" id="btn-clear">🔲 Clear</button>
-            <button class="action-btn-sm" id="btn-csv-export">📥 CSV</button>
-            <button class="action-btn-sm" id="btn-json-export">{ } JSON</button>
-            <button class="action-btn-sm" id="btn-print">🖨️ Print</button>
-            <button class="action-btn-sm" id="btn-bulk-ignore" style="color: var(--warning-color); border-color: var(--warning-color);">🗑️ Ignore</button>
-          </div>
-        </div>
-        <div class="table-container resizable-container" style="flex: 2; margin-bottom: 20px;">
-          <table id="data-table">
-            <thead>
-              <tr id="table-headers">
-                <th style="width: 40px;">☑️</th>
-              </tr>
-            </thead>
-            <tbody id="table-body">
-              <tr><td colspan="100%" style="text-align:center;">No data imported. Upload a CSV.</td></tr>
-            </tbody>
-          </table>
+        
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="tab-current">📥 Current Import</button>
+          <button class="tab-btn" data-tab="tab-historical">🕰️ Historical Data</button>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; margin-top: 5px;">
-          <h4 style="margin: 0; color: var(--warning-color);">Ignored Items</h4>
-          <div class="action-bar">
-            <button class="action-btn-sm" id="btn-select-all-ignored">☑️ Select All</button>
-            <button class="action-btn-sm" id="btn-clear-ignored">🔲 Clear</button>
-            <button class="action-btn-sm" id="btn-bulk-restore" style="color: #2ea043; border-color: #2ea043;">♻️ Restore</button>
+        <!-- TAB 1: Current Import -->
+        <div class="tab-content active" id="tab-current" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <h4 style="margin: 0;">Active Data</h4>
+            <div class="action-bar">
+              <button class="action-btn-sm" id="btn-select-all">☑️ Select All</button>
+              <button class="action-btn-sm" id="btn-clear">🔲 Clear</button>
+              <button class="action-btn-sm" id="btn-csv-export">📥 CSV</button>
+              <button class="action-btn-sm" id="btn-json-export">{ } JSON</button>
+              <button class="action-btn-sm" id="btn-save-to-history" style="color: #58a6ff; border-color: #58a6ff; font-weight: bold;">💾 Save to History</button>
+              <button class="action-btn-sm" id="btn-bulk-ignore" style="color: var(--warning-color); border-color: var(--warning-color);">🗑️ Ignore</button>
+            </div>
+          </div>
+          <div class="table-container resizable-container" style="flex: 3; margin-bottom: 10px;">
+            <table id="data-table">
+              <thead>
+                <tr id="table-headers">
+                  <th style="width: 40px;">☑️</th>
+                </tr>
+              </thead>
+              <tbody id="table-body">
+                <tr><td colspan="100%" style="text-align:center;">No data imported. Upload a CSV.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <h4 style="margin: 0; color: var(--warning-color); font-size: 0.9rem;">Ignored Items</h4>
+            <div class="action-bar">
+              <button class="action-btn-sm" id="btn-select-all-ignored">☑️ Select All</button>
+              <button class="action-btn-sm" id="btn-clear-ignored">🔲 Clear</button>
+              <button class="action-btn-sm" id="btn-bulk-restore" style="color: #2ea043; border-color: #2ea043;">♻️ Restore</button>
+            </div>
+          </div>
+          <div class="table-container" style="flex: 1; border: 1px solid var(--border-color); max-height: 150px;">
+            <table id="ignored-table">
+              <thead>
+                <tr id="ignored-table-headers">
+                  <th style="width: 40px;">☑️</th>
+                </tr>
+              </thead>
+              <tbody id="ignored-table-body">
+                <tr><td colspan="100%" style="text-align:center;">No ignored items.</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-        <div class="table-container" style="flex: 1; border: 1px solid var(--border-color);">
-          <table id="ignored-table">
-            <thead>
-              <tr id="ignored-table-headers">
-                <th style="width: 40px;">☑️</th>
-              </tr>
-            </thead>
-            <tbody id="ignored-table-body">
-              <tr><td colspan="100%" style="text-align:center;">No ignored items.</td></tr>
-            </tbody>
-          </table>
+        
+        <!-- TAB 2: Historical Data -->
+        <div class="tab-content" id="tab-historical" style="display: none; flex-direction: column; flex: 1; min-height: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <h4 style="margin: 0; color: #58a6ff;">Historical Data Repository</h4>
+            <div class="action-bar">
+              <button class="action-btn-sm" id="btn-select-all-history">☑️ Select All</button>
+              <button class="action-btn-sm" id="btn-clear-history">🔲 Clear</button>
+              <button class="action-btn-sm" id="btn-delete-history" style="color: var(--danger-color); border-color: var(--danger-color);">🗑️ Delete Selected</button>
+            </div>
+          </div>
+          <div class="table-container" style="flex: 1; border: 1px solid var(--border-color);">
+            <table id="history-table">
+              <thead>
+                <tr id="history-table-headers">
+                  <th style="width: 40px;">☑️</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <tr><td colspan="100%" style="text-align:center;">No historical data yet. Select Active Data and click 'Save to History'.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </section>
 
       <!-- Zone 4: Analytics -->

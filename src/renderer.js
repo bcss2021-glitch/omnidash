@@ -7,15 +7,97 @@ let schema = JSON.parse(localStorage.getItem('scandoc_schema')) || [
 ];
 
 const btnInitDash = document.getElementById('btn-init-dash');
+const btnResumeDash = document.getElementById('btn-resume-dash');
+const resumeWorkspaceNameSpan = document.getElementById('resume-workspace-name');
+const btnExitWorkspace = document.getElementById('btn-exit-workspace');
+const quickSwitcher = document.getElementById('quick-switcher');
+
+let currentActiveWorkspace = localStorage.getItem('scandoc_workspace_name') || '';
+
+// Initialize Intro Screen
+function initIntroScreen() {
+  const ts = document.getElementById('title-screen');
+  ts.style.opacity = '1';
+  ts.style.visibility = 'visible';
+  
+  if (currentActiveWorkspace) {
+    btnResumeDash.style.display = 'block';
+    resumeWorkspaceNameSpan.innerText = `[${currentActiveWorkspace.toUpperCase()}]`;
+  } else {
+    btnResumeDash.style.display = 'none';
+  }
+  
+  btnExitWorkspace.style.display = 'none';
+  quickSwitcher.style.display = 'none';
+}
+
+function hideIntroScreen() {
+  const ts = document.getElementById('title-screen');
+  ts.style.opacity = '0';
+  ts.style.visibility = 'hidden';
+  btnExitWorkspace.style.display = 'inline-block';
+  updateQuickSwitcher();
+  quickSwitcher.style.display = 'inline-block';
+}
+
 if (btnInitDash) {
   btnInitDash.addEventListener('click', () => {
-    const ts = document.getElementById('title-screen');
-    if (ts) {
-      ts.style.opacity = '0';
-      ts.style.visibility = 'hidden';
-    }
+    // Start Fresh: clear current workspace name but don't delete stored configs
+    currentActiveWorkspace = '';
+    localStorage.setItem('scandoc_workspace_name', '');
+    document.getElementById('workspace-name').value = '';
+    globalData = [];
+    if (typeof historicalData !== 'undefined') historicalData = [];
+    processData();
+    if (typeof renderHistoryTable === 'function') renderHistoryTable();
+    hideIntroScreen();
   });
 }
+
+if (btnResumeDash) {
+  btnResumeDash.addEventListener('click', () => {
+    // Resume using currentActiveWorkspace
+    const storedStr = localStorage.getItem('omnidash_config_' + currentActiveWorkspace);
+    if (storedStr) {
+      try { applyWorkspaceConfig(JSON.parse(storedStr), true); } catch(e) {}
+    }
+    hideIntroScreen();
+  });
+}
+
+if (btnExitWorkspace) {
+  btnExitWorkspace.addEventListener('click', () => {
+    // Clear the screen data but don't delete history
+    globalData = [];
+    if (typeof historicalData !== 'undefined') historicalData = [];
+    processData();
+    if (typeof renderHistoryTable === 'function') renderHistoryTable();
+    initIntroScreen();
+  });
+}
+
+function updateQuickSwitcher() {
+  if (!quickSwitcher) return;
+  quickSwitcher.innerHTML = '<option value="">Switch Workspace...</option>';
+  let savedNames = JSON.parse(localStorage.getItem('omnidash_saved_configs')) || [];
+  savedNames.forEach(name => {
+    const selected = name === currentActiveWorkspace ? 'selected' : '';
+    quickSwitcher.innerHTML += `<option value="${name}" ${selected}>${name}</option>`;
+  });
+}
+
+quickSwitcher.addEventListener('change', (e) => {
+  const selected = e.target.value;
+  if (!selected) return;
+  const storedStr = localStorage.getItem('omnidash_config_' + selected);
+  if (!storedStr) return alert("Config data missing in storage!");
+  try { 
+    applyWorkspaceConfig(JSON.parse(storedStr), true); 
+    currentActiveWorkspace = selected;
+  } catch(err) { alert("Stored config is corrupt!"); }
+});
+
+initIntroScreen();
 
 let cloudSettings = JSON.parse(localStorage.getItem('scandoc_cloud')) || {
   active: 'google',
@@ -29,6 +111,28 @@ let analyticsConfig = JSON.parse(localStorage.getItem('scandoc_analytics')) || {
 };
 
 let globalData = [];
+let historicalData = [];
+let activeTab = 'tab-current';
+
+function loadHistoricalData() {
+  if (!currentActiveWorkspace) { historicalData = []; return; }
+  historicalData = JSON.parse(localStorage.getItem('omnidash_history_' + currentActiveWorkspace)) || [];
+  historicalData.forEach(r => r._selected = false);
+}
+
+function saveHistoricalData() {
+  if (!currentActiveWorkspace) return;
+  localStorage.setItem('omnidash_history_' + currentActiveWorkspace, JSON.stringify(historicalData));
+}
+
+function getRowHash(row) {
+  const o = {...row};
+  delete o._id;
+  delete o._ignored;
+  delete o._selected;
+  return JSON.stringify(o);
+}
+
 let currentFilter = 1;
 let chartInstance = null;
 let chartToggles = { smooth: true, grid: true, stacked: false, fill: true };
@@ -73,6 +177,30 @@ const btnCloseSettingsX = document.getElementById('btn-close-settings-x');
 const btnSaveSettings = document.getElementById('btn-save-settings');
 const btnAddSchemaRow = document.getElementById('btn-add-schema-row');
 const btnImportSchemaCsv = document.getElementById('btn-import-schema-csv');
+
+// Tab Logic
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
+    
+    btn.classList.add('active');
+    const target = btn.getAttribute('data-tab');
+    document.getElementById(target).classList.add('active');
+    document.getElementById(target).style.display = 'flex';
+    activeTab = target;
+    
+    if (activeTab === 'tab-current') {
+      renderAnalytics(getFilteredActiveData());
+    } else {
+      renderAnalytics(historicalData);
+    }
+  });
+});
+
 const btnExportSchemaConfig = document.getElementById('btn-export-schema-config');
 const btnLoadSchemaConfig = document.getElementById('btn-load-schema-config');
 const schemaConfigLoadInput = document.getElementById('schema-config-load');
@@ -346,7 +474,7 @@ btnExportSchemaConfig.addEventListener('click', () => {
   }
 });
 
-function applyWorkspaceConfig(loaded) {
+function applyWorkspaceConfig(loaded, silent = false) {
   schemaBody.innerHTML = '';
   
   let loadedSchemaToUse = [];
@@ -383,7 +511,23 @@ function applyWorkspaceConfig(loaded) {
      localStorage.setItem('scandoc_workspace_name', '');
   }
   
-  alert("Workspace loaded successfully! Don't forget to hit 'Save All Settings' below.");
+  currentActiveWorkspace = loaded.workspaceName || '';
+  
+  // Clear active imported data on switch
+  globalData = [];
+  processData();
+  
+  // Load and render history
+  loadHistoricalData();
+  if (typeof renderHistoryTable === 'function') renderHistoryTable();
+  
+  if (activeTab === 'tab-current') {
+    renderAnalytics(getFilteredActiveData());
+  } else {
+    renderAnalytics(historicalData);
+  }
+  
+  if (!silent) alert("Workspace loaded successfully! Don't forget to hit 'Save All Settings' below.");
 }
 
 // Schema Config Load Hook
@@ -524,8 +668,11 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   document.getElementById('toggle-'+btnId).addEventListener('click', (e) => {
     chartToggles[btnId] = !chartToggles[btnId];
     e.target.classList.toggle('active');
-    const processedActiveData = globalData.filter(row => !row._ignored);
-    renderAnalytics(processedActiveData);
+    if (activeTab === 'tab-current') {
+      renderAnalytics(getFilteredActiveData());
+    } else {
+      renderAnalytics(historicalData);
+    }
   });
 });
 
@@ -544,7 +691,14 @@ function getFilteredActiveData() {
 
 // --- 4. DATA PROCESSING & RENDERING --- //
 function processData() {
-  if (globalData.length === 0) { renderDataGrids([], []); return; }
+  if (globalData.length === 0) { 
+    renderDataGrids([], []); 
+    valTotalItems.innerText = '0';
+    valUnrecognized.innerText = '0';
+    valIgnored.innerText = '0';
+    if (activeTab === 'tab-current') renderAnalytics([]);
+    return; 
+  }
   const activeData = getFilteredActiveData();
   const ignoredData = globalData.filter(row => row._ignored);
   
@@ -552,7 +706,7 @@ function processData() {
   valUnrecognized.innerText = activeData.filter(r => Object.values(r).some(v => v === '' || v === undefined)).length;
   valIgnored.innerText = ignoredData.length; 
   renderDataGrids(activeData, ignoredData);
-  renderAnalytics(activeData);
+  if (activeTab === 'tab-current') renderAnalytics(activeData);
 }
 
 function renderDataGrids(active = [], ignored = []) {
@@ -571,6 +725,34 @@ function renderDataGrids(active = [], ignored = []) {
   tableBody.innerHTML = generateRowHtml(active); 
   ignoredTableBody.innerHTML = generateRowHtml(ignored);
   document.querySelectorAll('.select-toggle').forEach(chk => chk.addEventListener('change', (e) => toggleSelect(parseInt(e.currentTarget.getAttribute('data-id')))));
+}
+
+function renderHistoryTable() {
+  const historyTableHeaders = document.getElementById('history-table-headers');
+  const historyTableBody = document.getElementById('history-table-body');
+  if (!historyTableHeaders || !historyTableBody) return;
+  
+  const visibleSchema = schema.filter(col => col.visible !== false);
+  historyTableHeaders.innerHTML = `<th style="width: 40px;">☑️</th>` + visibleSchema.map(col => `<th>${col.name}</th>`).join('');
+  
+  if (historicalData.length === 0) {
+    historyTableBody.innerHTML = `<tr><td colspan="${visibleSchema.length + 1}" style="text-align:center;">No historical data available.</td></tr>`;
+    return;
+  }
+  
+  historyTableBody.innerHTML = historicalData.map(row => {
+    let cells = visibleSchema.map(col => `<td>${(col.type === 'currency' && row[col.name] && !isNaN(row[col.name])) ? '$'+parseFloat(row[col.name]).toFixed(2) : (row[col.name]||'')}</td>`).join('');
+    return `<tr><td><input type="checkbox" class="select-history-toggle" data-id="${row._id}" ${row._selected ? 'checked' : ''}/></td>${cells}</tr>`;
+  }).join('');
+  
+  document.querySelectorAll('.select-history-toggle').forEach(chk => {
+    chk.addEventListener('change', (e) => {
+      const idStr = e.currentTarget.getAttribute('data-id');
+      const idNum = Number(idStr) || idStr;
+      const row = historicalData.find(r => r._id == idNum);
+      if (row) row._selected = !row._selected;
+    });
+  });
 }
 
 // --- 5. BULK EXPORT ACTIONS --- //
@@ -595,6 +777,48 @@ document.getElementById('btn-clear-ignored').addEventListener('click', () => {
 });
 document.getElementById('btn-bulk-restore').addEventListener('click', () => {
   globalData.forEach(r => { if (r._ignored && r._selected) { r._ignored = false; r._selected = false; } }); processData();
+});
+
+// History Actions
+document.getElementById('btn-save-to-history').addEventListener('click', () => {
+  if (!currentActiveWorkspace) return alert("Please create and save a Workspace Profile first before saving history!");
+  const selectedData = globalData.filter(r => !r._ignored && r._selected);
+  if (selectedData.length === 0) return alert("Select active items to save first.");
+  
+  let addedCount = 0;
+  let dupCount = 0;
+  const existingHashes = new Set(historicalData.map(r => getRowHash(r)));
+  
+  selectedData.forEach(row => {
+    const hash = getRowHash(row);
+    if (!existingHashes.has(hash)) {
+      historicalData.push({...row, _id: Date.now() + Math.random()});
+      existingHashes.add(hash);
+      addedCount++;
+    } else {
+      dupCount++;
+    }
+  });
+  
+  saveHistoricalData();
+  if (typeof renderHistoryTable === 'function') renderHistoryTable();
+  if (activeTab === 'tab-historical') renderAnalytics(historicalData);
+  alert(`Added ${addedCount} new rows to History. ${dupCount} duplicates were ignored.`);
+});
+
+document.getElementById('btn-select-all-history').addEventListener('click', () => {
+  historicalData.forEach(r => r._selected = true); renderHistoryTable();
+});
+document.getElementById('btn-clear-history').addEventListener('click', () => {
+  historicalData.forEach(r => r._selected = false); renderHistoryTable();
+});
+document.getElementById('btn-delete-history').addEventListener('click', () => {
+  const beforeCount = historicalData.length;
+  historicalData = historicalData.filter(r => !r._selected);
+  if (historicalData.length === beforeCount) return alert("Select items to delete first.");
+  saveHistoricalData();
+  renderHistoryTable();
+  if (activeTab === 'tab-historical') renderAnalytics(historicalData);
 });
 
 // Exports
