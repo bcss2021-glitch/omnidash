@@ -1,0 +1,9 @@
+,,,,
+Configuration Profiles,,,,
+,,,,
+New Profile,,Existing,,
+'placeholder=profile name’,SAVE,DROPDOWN,LOAD,BACKUP
+,,From File,RESTORE,
+,,,,
+Headers(.csv),IMPORT,,,
+should be placed just above the Column Name section,,,"right or left justified,.. I would go for right",

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css" />
+  <link rel="stylesheet" href="index.css?v=2" />
 </head>
 <body>
   <!-- Title Screen Overlay -->
@@ -39,7 +39,7 @@
   <div class="dashboard-grid">
     
     <!-- Zone 1: Metrics -->
-    <section class="zone" id="zone-metrics">
+    <section class="zone compact" id="zone-metrics">
       <div class="metric-card pattern-bg">
         <h3>Total Items</h3>
         <p id="val-total-items">0</p>
@@ -155,11 +155,111 @@
   <!-- Settings Modal (Hidden) -->
   <div class="modal" id="settings-modal" style="align-items: flex-start; padding-top: 5vh; overflow-y: auto;">
     <div class="modal-content" style="width: 700px; max-width: 95%; position: relative;">
-      <button class="nav-btn" id="btn-settings-help" style="position: absolute; top: 1.5rem; right: 1.5rem;">❓ Help Guide</button>
+
+      <!-- Schema Settings Section -->
+      <div class="accordion-header active" data-target="content-schema">Schema Settings <span class="accordion-chevron">▼</span></div>
+      <div class="accordion-content active" id="content-schema">
+        <p style="color: #888; font-size:0.9rem; margin-bottom: 15px;">Define the expected columns to map your imported or synced data onto exactly.</p>
+        
+        <div class="config-toolbar" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; background: transparent; border: none; padding: 0;">
+
+          <!-- Left Column: New Profile -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">New Profile</span>
+            <div style="display: flex; gap: 5px; align-items: stretch; height: 32px;">
+              <input type="text" id="workspace-name" placeholder="profile name" maxlength="30" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0 0.5rem; flex-grow: 1; box-sizing: border-box;" />
+              <button class="action-btn" id="btn-export-schema-config" style="padding: 0 1rem; box-sizing: border-box; display: inline-flex; align-items: center; margin: 0;">SAVE</button>
+            </div>
+          </div>
+
+          <!-- Right Column: Existing -->
+          <div style="display: flex; flex-direction: column; gap: 8px; border-left: 1px solid var(--border-color); padding-left: 20px;">
+            <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">Existing</span>
+            <div style="display: flex; gap: 5px; align-items: stretch; height: 32px;">
+              <select id="config-dropdown" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0 0.5rem; flex-grow: 1; box-sizing: border-box; margin: 0; outline: none;"></select>
+              <button class="action-btn" id="btn-load-selected" style="padding: 0 1rem; box-sizing: border-box; display: inline-flex; align-items: center; margin: 0;">LOAD</button>
+              <button class="action-btn" id="btn-download-selected" style="padding: 0 1rem; box-sizing: border-box; color: var(--brand-color); border-color: var(--brand-color); display: inline-flex; align-items: center; margin: 0;">BACKUP</button>
+            </div>
+            <div style="display: flex; justify-content: flex-end; align-items: stretch; gap: 5px; height: 32px; margin-top: 3px;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; line-height: 32px;">From File</span>
+              <input type="file" id="schema-config-load" accept=".json" style="display:none;" />
+              <button class="action-btn" id="btn-load-schema-config" style="padding: 0 1rem; box-sizing: border-box; display: inline-flex; align-items: center; margin: 0;">RESTORE</button>
+            </div>
+          </div>
+
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; align-items: stretch; gap: 10px; margin-top: 15px; margin-bottom: 20px; height: 32px;">
+          <span style="font-size: 0.85rem; color: var(--text-secondary); line-height: 32px;">Headers(.csv)</span>
+          <button class="action-btn" id="btn-import-schema-csv" style="padding: 0 1rem; box-sizing: border-box; display: inline-flex; align-items: center; margin: 0;">IMPORT</button>
+        </div>
+      
+      <table class="schema-table">
+        <thead>
+          <tr>
+            <th>Column Name</th>
+            <th>Data Type</th>
+            <th style="width: 100px; text-align: center;">Visible</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="schema-body">
+          <!-- Schema configuration items loaded here -->
+        </tbody>
+      </table>
+      
+      <button class="action-btn" id="btn-add-schema-row">+ Add Column</button>
+      </div>
+
+
+      <!-- Analytics Settings Section -->
+      <div class="accordion-header" data-target="content-analytics">Analytics Configuration <span class="accordion-chevron">▼</span></div>
+      <div class="accordion-content" id="content-analytics">
+      <p style="color: #888; font-size:0.9rem; margin-bottom: 20px;">Design the Zone 4 Graph dynamically using the columns mapped above.</p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+        
+        <div>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Chart Type:</label>
+          <select id="analytics-type" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
+            <option value="line">Line Chart</option>
+            <option value="bar">Bar Chart</option>
+            <option value="doughnut">Doughnut Chart</option>
+            <option value="radar">Radar Chart</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">X-Axis Column:</label>
+          <select id="analytics-xaxis" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
+             <!-- Injected dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Y-Axis 1 Column:</label>
+          <select id="analytics-yaxis1" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
+             <!-- Injected dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Y-Axis 2 Column (Optional):</label>
+          <select id="analytics-yaxis2" style="width:100%; padding:0.5rem; margin-bottom:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
+             <option value="">-- None --</option>
+             <!-- Injected dynamically -->
+          </select>
+        </div>
+      </div>
+      </div>
 
       <!-- Cloud Settings Section -->
-      <h2 style="margin-bottom:5px;">Cloud Integration</h2>
-      <p style="color: #888; font-size:0.9rem; margin-bottom: 20px;">Select the active cloud provider and configure its connection.</p>
+      <div class="accordion-header" data-target="content-cloud">Cloud Integration <span class="accordion-chevron">▼</span></div>
+      <div class="accordion-content" id="content-cloud">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <p style="color: #888; font-size:0.9rem; margin: 0;">Select the active cloud provider and configure its connection.</p>
+        <button class="action-btn-sm" id="btn-settings-help" style="padding: 0.4rem 0.8rem; margin-top: -5px;">❓ Integration Guide</button>
+      </div>
       
       <div class="cloud-providers">
         <!-- Google -->
@@ -232,79 +332,6 @@
         </label>
       </div>
 
-      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;"/>
-
-      <!-- Schema Settings Section -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
-        <div>
-          <h2>Schema Settings</h2>
-          <p style="color: #888; font-size:0.9rem; margin-bottom: 0;">Define the expected columns to map your imported or synced data onto exactly.</p>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <input type="text" id="workspace-name" placeholder="Name (e.g. Finance)" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0.4rem; width:140px;" />
-          <input type="file" id="schema-config-load" accept=".json" style="display:none;" />
-          <button class="nav-btn" id="btn-export-schema-config">💾 Backup Config</button>
-          <button class="nav-btn" id="btn-load-schema-config">📁 Load Config</button>
-          <button class="action-btn" id="btn-import-schema-csv" style="width: auto; padding: 0.5rem 1rem;">📥 Import Headers (.csv)</button>
-        </div>
-      </div>
-      
-      <table class="schema-table">
-        <thead>
-          <tr>
-            <th>Column Name</th>
-            <th>Data Type</th>
-            <th style="width: 100px; text-align: center;">Visible</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="schema-body">
-          <!-- Schema configuration items loaded here -->
-        </tbody>
-      </table>
-      
-      <button class="action-btn" id="btn-add-schema-row">+ Add Column</button>
-
-      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;"/>
-
-      <!-- Analytics Settings Section -->
-      <h2>Analytics Configuration</h2>
-      <p style="color: #888; font-size:0.9rem; margin-bottom: 20px;">Design the Zone 4 Graph dynamically using the columns mapped above.</p>
-      
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-        
-        <div>
-          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Chart Type:</label>
-          <select id="analytics-type" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
-            <option value="line">Line Chart</option>
-            <option value="bar">Bar Chart</option>
-            <option value="doughnut">Doughnut Chart</option>
-            <option value="radar">Radar Chart</option>
-          </select>
-        </div>
-
-        <div>
-          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">X-Axis Column:</label>
-          <select id="analytics-xaxis" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
-             <!-- Injected dynamically -->
-          </select>
-        </div>
-
-        <div>
-          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Y-Axis 1 Column:</label>
-          <select id="analytics-yaxis1" style="width:100%; padding:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
-             <!-- Injected dynamically -->
-          </select>
-        </div>
-
-        <div>
-          <label style="display:block; margin-bottom:0.5rem; font-weight:600; color:var(--text-secondary);">Y-Axis 2 Column (Optional):</label>
-          <select id="analytics-yaxis2" style="width:100%; padding:0.5rem; margin-bottom:0.5rem; background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px;">
-             <option value="">-- None --</option>
-             <!-- Injected dynamically -->
-          </select>
-        </div>
-      </div>
 
       <div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center;">
         <span id="last-backup-date" style="color: var(--text-secondary); font-size: 0.85rem; margin-right: auto; padding-left: 10px;">Last Backup: Never</span>
@@ -370,8 +397,18 @@
   </div>
 
   <!-- Scripts -->
-  <script src="../node_modules/papaparse/papaparse.min.js"></script>
-  <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
-  <script src="renderer.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Polyfill for Vercel/Web environment where Electron preload is missing
+    if (!window.googleApp) {
+      window.googleApp = {
+        fetchGoogleSheet: async () => {
+          throw new Error("Cloud Sync requires the OmniDash desktop app environment or a backend.");
+        }
+      };
+    }
+  </script>
+  <script src="renderer.js?v=2"></script>
 </body>
 </html>

@@ -296,6 +296,20 @@ btnExportSchemaConfig.addEventListener('click', () => {
   };
 
   const inputName = document.getElementById('workspace-name').value.trim();
+  if (!inputName) {
+    return alert("Please enter a workspace name before saving the configuration!");
+  }
+
+  const safeName = inputName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  if (!safeName) {
+     return alert("Please use valid letters or numbers for the workspace name.");
+  }
+
+  let savedNames = JSON.parse(localStorage.getItem('omnidash_saved_configs')) || [];
+  if (savedNames.includes(safeName)) {
+    return alert("A workspace configuration with this name already exists in our records! Please choose a unique name.");
+  }
+
   localStorage.setItem('scandoc_workspace_name', inputName);
 
   const fullWorkspace = {
@@ -306,12 +320,17 @@ btnExportSchemaConfig.addEventListener('click', () => {
   };
   
   const blobContent = JSON.stringify(fullWorkspace, null, 2);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([blobContent], { type: 'application/json' }));
+  localStorage.setItem('omnidash_config_' + safeName, blobContent);
+
+  savedNames.push(safeName);
+  localStorage.setItem('omnidash_saved_configs', JSON.stringify(savedNames));
   
-  const safeName = inputName ? inputName.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'omnidash';
-  a.download = `${safeName}_workspace_backup.json`;
-  a.click();
+  updateConfigDropdown();
+  if (document.getElementById('config-dropdown')) {
+    document.getElementById('config-dropdown').value = safeName;
+  }
+  
+  alert("Configuration saved successfully to local records!");
 
   const now = new Date().toLocaleString();
   localStorage.setItem('scandoc_last_backup', now);
@@ -319,6 +338,46 @@ btnExportSchemaConfig.addEventListener('click', () => {
     document.getElementById('last-backup-date').innerText = 'Last Backup: ' + now;
   }
 });
+
+function applyWorkspaceConfig(loaded) {
+  schemaBody.innerHTML = '';
+  
+  let loadedSchemaToUse = [];
+  
+  if (Array.isArray(loaded)) {
+    loadedSchemaToUse = loaded;
+  } else if (loaded && loaded.schema) {
+    loadedSchemaToUse = loaded.schema;
+    if (loaded.cloud) {
+       cloudSettings = loaded.cloud; 
+       loadSettingsToUI();
+    }
+    if (loaded.analytics) {
+       analyticsConfig = loaded.analytics;
+       document.getElementById('analytics-type').value = analyticsConfig.type;
+    }
+  } else {
+    throw new Error("Invalid format");
+  }
+  
+  loadedSchemaToUse.forEach(col => addSchemaRowToDOM(col.name, col.type, col.visible !== false));
+  
+  if (!Array.isArray(loaded) && loaded.analytics) {
+     if (loaded.analytics.xAxis) document.getElementById('analytics-xaxis').value = loaded.analytics.xAxis;
+     if (loaded.analytics.yAxis1) document.getElementById('analytics-yaxis1').value = loaded.analytics.yAxis1;
+     if (loaded.analytics.yAxis2) document.getElementById('analytics-yaxis2').value = loaded.analytics.yAxis2;
+  }
+  
+  if (!Array.isArray(loaded) && loaded.workspaceName) {
+     document.getElementById('workspace-name').value = loaded.workspaceName;
+     localStorage.setItem('scandoc_workspace_name', loaded.workspaceName);
+  } else {
+     document.getElementById('workspace-name').value = '';
+     localStorage.setItem('scandoc_workspace_name', '');
+  }
+  
+  alert("Workspace loaded successfully! Don't forget to hit 'Save All Settings' below.");
+}
 
 // Schema Config Load Hook
 btnLoadSchemaConfig.addEventListener('click', () => schemaConfigLoadInput.click());
@@ -329,46 +388,26 @@ schemaConfigLoadInput.addEventListener('change', (e) => {
   reader.onload = (event) => {
     try {
       const loaded = JSON.parse(event.target.result);
-      schemaBody.innerHTML = '';
       
-      let loadedSchemaToUse = [];
+      const rawName = file.name.replace(/\.json$/i, '');
+      const safeName = rawName.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 30) || 'imported_config';
       
-      if (Array.isArray(loaded)) {
-        // Legacy array-only support
-        loadedSchemaToUse = loaded;
-      } else if (loaded && loaded.schema) {
-        // Full workspace context support
-        loadedSchemaToUse = loaded.schema;
-        if (loaded.cloud) {
-           cloudSettings = loaded.cloud; 
-           loadSettingsToUI();
-        }
-        if (loaded.analytics) {
-           analyticsConfig = loaded.analytics;
-           document.getElementById('analytics-type').value = analyticsConfig.type;
-        }
-      } else {
-        throw new Error("Invalid format");
+      let savedNames = JSON.parse(localStorage.getItem('omnidash_saved_configs')) || [];
+      if (!savedNames.includes(safeName)) {
+        savedNames.push(safeName);
+        localStorage.setItem('omnidash_saved_configs', JSON.stringify(savedNames));
+      }
+      localStorage.setItem('omnidash_config_' + safeName, event.target.result);
+      
+      loaded.workspaceName = safeName;
+      
+      applyWorkspaceConfig(loaded);
+      
+      updateConfigDropdown();
+      if (document.getElementById('config-dropdown')) {
+        document.getElementById('config-dropdown').value = safeName;
       }
       
-      loadedSchemaToUse.forEach(col => addSchemaRowToDOM(col.name, col.type, col.visible !== false));
-      
-      if (!Array.isArray(loaded) && loaded.analytics) {
-         // Auto-select the newly injected axes
-         if (loaded.analytics.xAxis) document.getElementById('analytics-xaxis').value = loaded.analytics.xAxis;
-         if (loaded.analytics.yAxis1) document.getElementById('analytics-yaxis1').value = loaded.analytics.yAxis1;
-         if (loaded.analytics.yAxis2) document.getElementById('analytics-yaxis2').value = loaded.analytics.yAxis2;
-      }
-      
-      if (!Array.isArray(loaded) && loaded.workspaceName) {
-         document.getElementById('workspace-name').value = loaded.workspaceName;
-         localStorage.setItem('scandoc_workspace_name', loaded.workspaceName);
-      } else {
-         document.getElementById('workspace-name').value = '';
-         localStorage.setItem('scandoc_workspace_name', '');
-      }
-      
-      alert("Workspace loaded successfully! Don't forget to hit 'Save All Settings' below.");
     } catch (err) {
       alert("Failed to load config: Invalid file format.");
     }
@@ -376,6 +415,45 @@ schemaConfigLoadInput.addEventListener('change', (e) => {
   reader.readAsText(file);
   e.target.value = '';
 });
+
+// Config Dropdown Actions
+const btnLoadSelected = document.getElementById('btn-load-selected');
+const btnDownloadSelected = document.getElementById('btn-download-selected');
+const configDropdown = document.getElementById('config-dropdown');
+
+function updateConfigDropdown() {
+  if (!configDropdown) return;
+  configDropdown.innerHTML = '<option value="">-- Select Config --</option>';
+  let savedNames = JSON.parse(localStorage.getItem('omnidash_saved_configs')) || [];
+  savedNames.forEach(name => {
+    configDropdown.innerHTML += `<option value="${name}">${name}</option>`;
+  });
+}
+updateConfigDropdown();
+
+if (btnLoadSelected) {
+  btnLoadSelected.addEventListener('click', () => {
+    const selected = configDropdown.value;
+    if (!selected) return alert("Please select a config from the dropdown!");
+    const storedStr = localStorage.getItem('omnidash_config_' + selected);
+    if (!storedStr) return alert("Config data missing in storage!");
+    try { applyWorkspaceConfig(JSON.parse(storedStr)); }
+    catch(err) { alert("Stored config is corrupt!"); }
+  });
+}
+
+if (btnDownloadSelected) {
+  btnDownloadSelected.addEventListener('click', () => {
+    const selected = configDropdown.value;
+    if (!selected) return alert("Please select a config from the dropdown!");
+    const storedStr = localStorage.getItem('omnidash_config_' + selected);
+    if (!storedStr) return alert("Config data missing in storage!");
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([storedStr], { type: 'application/json' }));
+    a.download = `${selected}_workspace_backup.json`;
+    a.click();
+  });
+}
 
 // About Modal Hook
 const btnAbout = document.getElementById('btn-about');
@@ -604,3 +682,21 @@ function renderAnalytics(data) {
 }
 
 renderDataGrids([], []);
+
+// Accordion Logic for Settings Modal
+document.querySelectorAll('.accordion-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const isCurrentlyActive = header.classList.contains('active');
+    
+    // Close everything
+    document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('active'));
+    document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('active'));
+    
+    // Toggle clicked section
+    if (!isCurrentlyActive) {
+      header.classList.add('active');
+      const targetId = header.getAttribute('data-target');
+      if (targetId) document.getElementById(targetId).classList.add('active');
+    }
+  });
+});
