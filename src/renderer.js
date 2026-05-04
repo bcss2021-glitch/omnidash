@@ -615,7 +615,18 @@ btnImportLocal.addEventListener('click', () => { fileInput.click(); modalImport.
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  Papa.parse(file, { header: true, skipEmptyLines: true, complete: function(results) { injectDataIntoGlobal(results.data); } });
+  if (file.name.toLowerCase().endsWith('.json')) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target.result);
+        injectDataIntoGlobal(Array.isArray(json) ? json : [json]);
+      } catch (err) { alert("Invalid JSON file format."); }
+    };
+    reader.readAsText(file);
+  } else {
+    Papa.parse(file, { header: true, skipEmptyLines: true, complete: function(results) { injectDataIntoGlobal(results.data); } });
+  }
 });
 
 btnImportCloud.addEventListener('click', async () => {
@@ -652,6 +663,20 @@ btnImportCloud.addEventListener('click', async () => {
 function injectDataIntoGlobal(dataList) {
   globalData = dataList.map((row, i) => ({ ...row, _id: i, _ignored: false, _selected: false }));
   processData();
+  
+  // Automatically switch to Current Import tab
+  tabBtns.forEach(b => b.classList.remove('active'));
+  tabContents.forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
+  
+  const currentBtn = document.querySelector('.tab-btn[data-tab="tab-current"]');
+  if (currentBtn) currentBtn.classList.add('active');
+  const currentTab = document.getElementById('tab-current');
+  if (currentTab) {
+    currentTab.classList.add('active');
+    currentTab.style.display = 'flex';
+  }
+  activeTab = 'tab-current';
+  renderAnalytics(getFilteredActiveData());
 }
 
 // --- 3. FILTERING & TOGGLES LOGIC --- //
@@ -823,17 +848,17 @@ document.getElementById('btn-delete-history').addEventListener('click', () => {
 
 // Exports
 document.getElementById('btn-csv-export').addEventListener('click', () => {
-  const data = globalData.filter(r => !r._ignored && r._selected);
+  const data = historicalData.filter(r => r._selected);
   if (data.length===0) return alert("Select items first.");
   const clean = data.map(r => { const o={...r}; delete o._id; delete o._ignored; delete o._selected; return o; });
-  downloadBlob(Papa.unparse(clean), "omnidash_export.csv", "text/csv");
+  downloadBlob(Papa.unparse(clean), "omnidash_history_export.csv", "text/csv");
 });
 
 document.getElementById('btn-json-export').addEventListener('click', () => {
-  const data = globalData.filter(r => !r._ignored && r._selected);
+  const data = historicalData.filter(r => r._selected);
   if (data.length===0) return alert("Select items first.");
   const clean = data.map(r => { const o={...r}; delete o._id; delete o._ignored; delete o._selected; return o; });
-  downloadBlob(JSON.stringify(clean, null, 2), "omnidash_export.json", "application/json");
+  downloadBlob(JSON.stringify(clean, null, 2), "omnidash_history_export.json", "application/json");
 });
 
 document.getElementById('btn-print').addEventListener('click', () => {
