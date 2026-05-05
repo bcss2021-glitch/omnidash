@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css?v=3" />
+  <link rel="stylesheet" href="index.css?v=2" />
 </head>
 <body>
   <!-- Title Screen Overlay -->
@@ -42,7 +42,7 @@
       <button class="nav-btn" id="btn-import-modal">📥 Load Data</button>
       <button class="nav-btn" id="btn-settings">⚙️ Settings</button>
       <button class="nav-btn" id="btn-placeholder" style="visibility: hidden;">ℹ️ About</button>
-      <input type="file" id="file-upload" accept=".csv, .json" style="display:none;" />
+      <input type="file" id="file-upload" accept=".csv" style="display:none;" />
       <input type="file" id="schema-upload" accept=".csv" style="display:none;" />
     </div>
   </header>
@@ -89,7 +89,7 @@
       <section class="zone" id="zone-data">
         
         <div class="tabs-header">
-          <button class="tab-btn active" data-tab="tab-current">📥 Current Data</button>
+          <button class="tab-btn active" data-tab="tab-current">📥 Current Import</button>
           <button class="tab-btn" data-tab="tab-historical">🕰️ Historical Data</button>
         </div>
 
@@ -100,6 +100,8 @@
             <div class="action-bar">
               <button class="action-btn-sm" id="btn-select-all">☑️ Select All</button>
               <button class="action-btn-sm" id="btn-clear">🔲 Clear</button>
+              <button class="action-btn-sm" id="btn-csv-export">📥 CSV</button>
+              <button class="action-btn-sm" id="btn-json-export">{ } JSON</button>
               <button class="action-btn-sm" id="btn-save-to-history" style="color: #58a6ff; border-color: #58a6ff; font-weight: bold;">💾 Save to History</button>
               <button class="action-btn-sm" id="btn-bulk-ignore" style="color: var(--warning-color); border-color: var(--warning-color);">🗑️ Ignore</button>
             </div>
@@ -146,8 +148,6 @@
             <div class="action-bar">
               <button class="action-btn-sm" id="btn-select-all-history">☑️ Select All</button>
               <button class="action-btn-sm" id="btn-clear-history">🔲 Clear</button>
-              <button class="action-btn-sm" id="btn-csv-export">📥 CSV</button>
-              <button class="action-btn-sm" id="btn-json-export">{ } JSON</button>
               <button class="action-btn-sm" id="btn-delete-history" style="color: var(--danger-color); border-color: var(--danger-color);">🗑️ Delete Selected</button>
             </div>
           </div>
@@ -189,7 +189,7 @@
       <h2>Select Data Source</h2>
       <p style="color: var(--text-secondary); margin-bottom: 20px;">Fetch your data from a local file or sync from the active cloud provider.</p>
       
-      <button class="action-btn" id="btn-import-local" style="margin-bottom: 15px;">📁 Load Local CSV / JSON</button>
+      <button class="action-btn" id="btn-import-local" style="margin-bottom: 15px;">📁 Load Local CSV</button>
       <button class="action-btn" id="btn-import-cloud" style="border-color: #2ea043; color: #2ea043;">☁️ Sync from Cloud</button>
 
       <div class="modal-actions" style="margin-top: 2rem;">
@@ -445,6 +445,6 @@
       };
     }
   </script>
-  <script src="renderer.js?v=3"></script>
+  <script src="renderer.js?v=2"></script>
 </body>
 </html>

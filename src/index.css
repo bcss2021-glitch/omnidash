@@ -118,7 +118,7 @@ input[type="date"] {
 
 /* Zone 3 & 4 Layout container */
 .bottom-layout {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+  display: grid; grid-template-columns: 2fr 1.5fr; gap: 20px;
   grid-template-rows: minmax(0, 1fr);
   flex: 1; min-height: 0;
 }

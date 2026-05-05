@@ -1,56 +1,47 @@
-# OmniDash: Historical Data & UI Enhancements Plan (Finalized)
+# Revert to commit 180697f and reapply fixes step‑by‑step
 
-This plan outlines the architectural changes required to support persisting historical data per profile, drawing analytics dynamically based on tabs, and enhancing the user experience with a polished intro screen, logout function, and quick profile switcher.
+## Goal Description
+We will reset the repository to the stable commit `180697f` (May 4 2026) and then re‑apply the specific fixes that were added after that point. After each change we will run the dev server (`npm run dev`) and verify the UI behaves as expected.
 
-## Approved Decisions
+## User Review Required
+> [!IMPORTANT]
+> Please confirm that you want to proceed with the revert to `180697f`. This will change the working tree and may discard uncommitted work.
 
-1. **Dynamic Analytics (Graph Toggling):** The Analytics Chart will dynamically switch its data source based on the active tab in Zone 3. If you are viewing the "Current Import" tab, the graph shows newly imported data. If you switch to the "Historical Data" tab, the graph shows historical data.
-2. **Table Layout:** Zone 3 will use a Tabbed Interface. Tab 1 ("Current Import") will contain the existing Active and Ignored tables stacked, but the Ignored table will occupy less vertical space by default. Tab 2 will contain the new Historical Data table.
-3. **Logout Behavior:** Clicking "Exit Workspace" will clear out the currently imported active data from the screen, returning the app to a clean state on the Intro Screen while preserving all saved historical data.
-4. **Duplicate Prevention:** The "Save to History" function will implement logic to prevent identical rows from being appended to history multiple times.
-5. **Quick Profile Switcher:** A dropdown or quick-access menu will be added to the main Navbar to allow switching between saved configs/profiles without needing to open the Settings Modal.
+## Open Questions
+> [!CAUTION]
+> None at this time.
 
 ## Proposed Changes
-
-### 1. Intro Page & Navigation Enhancements
-- **Title Screen Overhaul:** Add a dynamic, animated CSS gradient background to the `#title-screen` to give it a premium, modern feel.
-- **Resume Feature:** The Title Screen will detect the last used workspace from `localStorage` and display a "Resume [Workspace Name]" button alongside "Start Fresh".
-- **Navbar Controls:** 
-  - Add an "Exit" button to clear the session and return to the Title Screen.
-  - Add a "Quick Switcher" dropdown in the navbar populated with all saved workspaces to allow rapid profile changing.
-
 ---
-
-### 2. Data Architecture: Active vs. Historical
-- **Historical Storage:** Introduce `historicalData` array in memory, backed by `localStorage.getItem('omnidash_history_' + profileName)`.
-- **Startup/Switch Sequence:** Upon initialization or switching profiles, the app will load the profile's Schema and its `historicalData`.
-- **Duplicate Prevention Engine:** When moving data from Active to History, a hash of the row values will be checked against existing history to silently ignore duplicates.
-
+### Step 1 – Revert to stable commit
+- **Action**: `git checkout 180697f`
+- **Verification**: Run `npm run dev` and open the app in a browser to ensure it loads without the recent bugs.
 ---
-
-### 3. UI Layout Adjustments (Zone 3 & 4)
-#### [MODIFY] src/index.html
-- Convert the Zone 3 Data area into a **Tabbed Interface**:
-  - **Tab 1: Current Import** (Contains Active Data table, "Save to History" button, and Ignored Items table).
-  - **Tab 2: Historical Repository** (Contains the historical data table).
-- Enhance the Title Screen HTML structure.
-- Update the Navbar with the Exit button and Quick Switcher.
-
-#### [MODIFY] src/index.css
-- Add styles for the Tabbed navigation UI in Zone 3.
-- Adjust the `flex` properties of the Ignored Items container to occupy less vertical space.
-- Add keyframe animations for the Intro Screen background.
-
-#### [MODIFY] src/renderer.js
-- Implement the Tab switching logic.
-- Implement `historicalData` state management.
-- Update `renderAnalytics` to accept an argument dictating whether to graph `globalData` or `historicalData` based on the active tab.
-- Implement duplicate prevention in the "Save to History" function.
-- Implement the "Exit" and "Quick Switch" logic.
+### Step 2 – Re‑apply fixes (one at a time)
+The following items were previously attempted (see `issue_summary.md`). We will re‑apply each, testing after each step:
+1. **Bypass aggressive browser caching** – ensure latest files are loaded.
+2. **Fix "Illegal return statement" syntax error** – correct duplicated code blocks.
+3. **Resolve null‑reference errors** that prevented UI interaction.
+4. **Restore "Start Fresh" button functionality**.
+5. **Re‑enable print functionality**.
+6. **Adjust UI layout modifications** (graph width, table toggling).
+7. **Accordion collapse functionality** – ensure it works.
+8. **Relocate export (CSV/JSON) buttons** to the historical data view.
+9. **Re‑implement caching work‑arounds** (e.g., meta tags, service‑worker busting).
+10. **Verify full data workflow** (import → save to history → workspace switch → exit).
+---
+### Step 3 – Final regression test
+- Run the full test suite (manual steps documented in `issue_summary.md`).
+- Commit the combined changes with a clear message, e.g., `"Restore stable base (180697f) and re‑apply UI fixes"`.
 
 ## Verification Plan
-1. **Intro Screen:** Verify the animated background and "Resume" button function correctly.
-2. **Tabs & Graphing:** Import data, verify it graphs on Tab 1. Switch to Tab 2, verify graph updates to show history.
-3. **Duplicates:** Attempt to save the same data twice to history; verify duplicates are rejected.
-4. **Quick Switcher:** Change profiles from the navbar and ensure schemas and historical data reload correctly.
-5. **Exit:** Click exit and ensure the active tables are wiped clean before showing the Intro Screen.
+### Automated Tests
+- `npm run dev` → open `http://localhost:3000` (or appropriate port).
+- Visually confirm each UI element works after its respective fix.
+
+### Manual Verification
+- Perform the import‑save‑switch‑exit flow.
+- Check that the graph updates correctly for both current and historical tabs.
+- Ensure export buttons download the correct data.
+
+Once you approve this plan, I will create a task list and start executing the steps.
