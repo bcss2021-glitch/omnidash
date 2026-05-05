@@ -17,28 +17,29 @@ let currentActiveWorkspace = localStorage.getItem('scandoc_workspace_name') || '
 // Initialize Intro Screen
 function initIntroScreen() {
   const ts = document.getElementById('title-screen');
+  if (!ts) return; // title screen removed — nothing to do
   ts.style.opacity = '1';
   ts.style.visibility = 'visible';
-  
   if (currentActiveWorkspace) {
-    btnResumeDash.style.display = 'block';
-    resumeWorkspaceNameSpan.innerText = `[${currentActiveWorkspace.toUpperCase()}]`;
+    if (btnResumeDash) btnResumeDash.style.display = 'block';
+    if (resumeWorkspaceNameSpan) resumeWorkspaceNameSpan.innerText = `[${currentActiveWorkspace.toUpperCase()}]`;
   } else {
-    btnResumeDash.style.display = 'none';
+    if (btnResumeDash) btnResumeDash.style.display = 'none';
   }
-  
-  btnExitWorkspace.style.display = 'none';
-  quickSwitcher.style.display = 'none';
+  if (btnExitWorkspace) btnExitWorkspace.style.display = 'none';
+  if (quickSwitcher) quickSwitcher.style.display = 'none';
 }
 
 function hideIntroScreen() {
   const ts = document.getElementById('title-screen');
+  if (!ts) return; // nothing to hide
   ts.style.opacity = '0';
   ts.style.visibility = 'hidden';
-  btnExitWorkspace.style.display = 'inline-block';
+  if (btnExitWorkspace) btnExitWorkspace.style.display = 'inline-block';
   updateQuickSwitcher();
-  quickSwitcher.style.display = 'inline-block';
+  if (quickSwitcher) quickSwitcher.style.display = 'inline-block';
 }
+
 
 if (btnInitDash) {
   btnInitDash.addEventListener('click', () => {
@@ -218,7 +219,11 @@ const lastBackupDateSpan = document.getElementById('last-backup-date');
 let storedLastBackupDate = localStorage.getItem('scandoc_last_backup') || 'Never';
 if(lastBackupDateSpan) lastBackupDateSpan.innerText = 'Last Backup: ' + storedLastBackupDate;
 
-// --- 1. SETTINGS MANAGEMENT --- //
+// For testing: hide intro screen so app opens directly to workspace
+if (typeof hideIntroScreen === 'function') {
+  try { hideIntroScreen(); } catch (e) { console.error('Failed to hide intro screen:', e); }
+}
+
 function renderSchemaEditor() {
   schemaBody.innerHTML = '';
   schema.forEach((col) => addSchemaRowToDOM(col.name, col.type, col.visible !== false));
@@ -836,14 +841,15 @@ document.getElementById('btn-json-export').addEventListener('click', () => {
   downloadBlob(JSON.stringify(clean, null, 2), "omnidash_export.json", "application/json");
 });
 
-document.getElementById('btn-print').addEventListener('click', () => {
+const btnPrint = document.getElementById('btn-print');
+if (btnPrint) btnPrint.addEventListener('click', () => {
   const data = globalData.filter(r => !r._ignored && r._selected);
   if (data.length===0) return alert("Select items first.");
   let html = '<html><head><title>Print Report</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background-color:#f2f2f2;}</style></head><body><h2>OmniDash Selected Data</h2><table>';
   html += '<tr>' + schema.map(c => `<th>${c.name}</th>`).join('') + '</tr>';
   data.forEach(row => { html += '<tr>' + schema.map(c => `<td>${row[c.name]||''}</td>`).join('') + '</tr>'; });
   html += '</table><script>window.print();</sc'+'ript></body></html>';
-  const p = window.open('','','width=800,height=600'); p.document.write(html); p.document.close();
+  const p = window.open('','','width=800,height=600'); if (p) { p.document.write(html); p.document.close(); }
 });
 
 function downloadBlob(content, name, type) {
