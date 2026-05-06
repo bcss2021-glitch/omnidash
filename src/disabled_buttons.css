@@ -1,0 +1,12 @@
+/* Disabled button styles */
+.nav-btn[disabled], .action-btn[disabled], .action-btn-sm[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: rgba(128,128,128,0.3) !important;
+  color: rgba(200,200,200,0.7) !important;
+  background: rgba(0,0,0,0.02) !important;
+}
+.nav-btn[disabled]:hover, .action-btn[disabled]:hover, .action-btn-sm[disabled]:hover {
+  border-color: rgba(128,128,128,0.3) !important;
+  color: rgba(200,200,200,0.7) !important;
+}
