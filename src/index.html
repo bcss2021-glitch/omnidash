@@ -204,8 +204,8 @@
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">New Profile</span>
             <div style="display: flex; gap: 5px; align-items: stretch; height: 32px;">
-              <input type="text" id="workspace-name" placeholder="profile name" maxlength="30" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0 0.5rem; flex-grow: 1; box-sizing: border-box;" />
-              <button class="action-btn" id="btn-export-schema-config" style="padding: 0 1rem; box-sizing: border-box; display: inline-flex; align-items: center; margin: 0;">SAVE</button>
+              <input type="text" id="workspace-name" placeholder="profile name" maxlength="30" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0 0.5rem; flex-grow: 1; min-width: 0; box-sizing: border-box;" />
+              <button class="action-btn" id="btn-export-schema-config" style="padding: 0 0.5rem; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; margin: 0; flex-shrink: 0;" title="Save New Profile">💾</button>
             </div>
           </div>
 
@@ -213,9 +213,10 @@
           <div style="display: flex; flex-direction: column; gap: 8px; border-left: 1px solid var(--border-color); padding-left: 20px;">
             <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">Existing</span>
             <div style="display: flex; gap: 5px; align-items: stretch; height: 32px;">
-              <select id="config-dropdown" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0 0.5rem; flex-grow: 1; box-sizing: border-box; margin: 0; outline: none;"></select>
-              <button class="action-btn" id="btn-load-selected" style="padding: 0 1rem; box-sizing: border-box; display: inline-flex; align-items: center; margin: 0;">LOAD</button>
-              <button class="action-btn" id="btn-download-selected" style="padding: 0 1rem; box-sizing: border-box; color: var(--brand-color); border-color: var(--brand-color); display: inline-flex; align-items: center; margin: 0;">BACKUP</button>
+              <select id="config-dropdown" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0 0.5rem; flex-grow: 1; min-width: 0; box-sizing: border-box; margin: 0; outline: none;"></select>
+              <button class="action-btn" id="btn-load-selected" style="padding: 0 0.5rem; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; margin: 0; flex-shrink: 0;" title="Load Profile">📂</button>
+              <button class="action-btn" id="btn-download-selected" style="padding: 0 0.5rem; box-sizing: border-box; color: var(--brand-color); border-color: var(--brand-color); display: inline-flex; align-items: center; justify-content: center; margin: 0; flex-shrink: 0;" title="Backup Profile">💾</button>
+              <button class="action-btn" id="btn-delete-selected" style="padding: 0 0.5rem; box-sizing: border-box; color: var(--danger-color); border-color: var(--danger-color); display: inline-flex; align-items: center; justify-content: center; margin: 0; flex-shrink: 0;" title="Delete Profile">🗑️</button>
             </div>
             <div style="display: flex; justify-content: flex-end; align-items: stretch; gap: 5px; height: 32px; margin-top: 3px;">
               <span style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; line-height: 32px;">From File</span>

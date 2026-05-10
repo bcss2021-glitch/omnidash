@@ -11,6 +11,7 @@ const btnExitWorkspace = document.getElementById('btn-exit-workspace');
 
 if (btnExitWorkspace) {
   btnExitWorkspace.addEventListener('click', () => {
+    if (!confirm("Are you sure you want to close this workspace? Any unsaved active data or settings will be lost.")) return;
     currentActiveWorkspace = '';
     localStorage.setItem('scandoc_workspace_name', '');
     document.getElementById('workspace-name').value = '';
@@ -41,9 +42,13 @@ function updateQuickSwitcher() {
   quickSwitcher.innerHTML = '<option value="">Switch Workspace...</option>';
   let savedNames = JSON.parse(localStorage.getItem('omnidash_saved_configs')) || [];
   savedNames.forEach(name => {
-    const selected = name === currentActiveWorkspace ? 'selected' : '';
-    quickSwitcher.innerHTML += `<option value="${name}" ${selected}>${name}</option>`;
+    quickSwitcher.innerHTML += `<option value="${name}">${name}</option>`;
   });
+  if (currentActiveWorkspace && savedNames.includes(currentActiveWorkspace)) {
+    quickSwitcher.value = currentActiveWorkspace;
+  } else {
+    quickSwitcher.value = '';
+  }
 }
 
 quickSwitcher.addEventListener('change', (e) => {
@@ -431,7 +436,13 @@ btnExportSchemaConfig.addEventListener('click', () => {
     document.getElementById('config-dropdown').value = safeName;
   }
   
+  updateQuickSwitcher();
+  if (quickSwitcher) {
+    quickSwitcher.value = safeName;
+  }
+  
   alert("Configuration saved successfully to local records!");
+  document.getElementById('workspace-name').value = '';
 
   const now = new Date().toLocaleString();
   localStorage.setItem('scandoc_last_backup', now);
@@ -536,6 +547,7 @@ schemaConfigLoadInput.addEventListener('change', (e) => {
 // Config Dropdown Actions
 const btnLoadSelected = document.getElementById('btn-load-selected');
 const btnDownloadSelected = document.getElementById('btn-download-selected');
+const btnDeleteSelected = document.getElementById('btn-delete-selected');
 const configDropdown = document.getElementById('config-dropdown');
 
 function updateConfigDropdown() {
@@ -569,6 +581,28 @@ if (btnDownloadSelected) {
     a.href = URL.createObjectURL(new Blob([storedStr], { type: 'application/json' }));
     a.download = `${selected}_workspace_backup.json`;
     a.click();
+  });
+}
+
+if (btnDeleteSelected) {
+  btnDeleteSelected.addEventListener('click', () => {
+    const selected = configDropdown.value;
+    if (!selected) return alert("Please select a config to delete!");
+    if (!confirm(`Are you sure you want to permanently delete the profile "${selected}"?`)) return;
+    
+    localStorage.removeItem('omnidash_config_' + selected);
+    localStorage.removeItem('omnidash_history_' + selected);
+    
+    let savedNames = JSON.parse(localStorage.getItem('omnidash_saved_configs')) || [];
+    savedNames = savedNames.filter(name => name !== selected);
+    localStorage.setItem('omnidash_saved_configs', JSON.stringify(savedNames));
+    
+    updateConfigDropdown();
+    updateQuickSwitcher();
+    
+    if (currentActiveWorkspace === selected) {
+      if (btnExitWorkspace) btnExitWorkspace.click();
+    }
   });
 }
 
