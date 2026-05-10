@@ -6,76 +6,35 @@ let schema = JSON.parse(localStorage.getItem('scandoc_schema')) || [
   { name: 'Status', type: 'string' }
 ];
 
-const btnInitDash = document.getElementById('btn-init-dash');
-const btnResumeDash = document.getElementById('btn-resume-dash');
-const resumeWorkspaceNameSpan = document.getElementById('resume-workspace-name');
-const btnExitWorkspace = document.getElementById('btn-exit-workspace');
 const quickSwitcher = document.getElementById('quick-switcher');
+const btnExitWorkspace = document.getElementById('btn-exit-workspace');
 
-let currentActiveWorkspace = localStorage.getItem('scandoc_workspace_name') || '';
-
-// Initialize Intro Screen
-function initIntroScreen() {
-  const ts = document.getElementById('title-screen');
-  if (!ts) return; // title screen removed — nothing to do
-  ts.style.opacity = '1';
-  ts.style.visibility = 'visible';
-  if (currentActiveWorkspace) {
-    if (btnResumeDash) btnResumeDash.style.display = 'block';
-    if (resumeWorkspaceNameSpan) resumeWorkspaceNameSpan.innerText = `[${currentActiveWorkspace.toUpperCase()}]`;
-  } else {
-    if (btnResumeDash) btnResumeDash.style.display = 'none';
-  }
-  if (btnExitWorkspace) btnExitWorkspace.style.display = 'none';
-  if (quickSwitcher) quickSwitcher.style.display = 'none';
-}
-
-function hideIntroScreen() {
-  const ts = document.getElementById('title-screen');
-  if (!ts) return; // nothing to hide
-  ts.style.opacity = '0';
-  ts.style.visibility = 'hidden';
-  if (btnExitWorkspace) btnExitWorkspace.style.display = 'inline-block';
-  updateQuickSwitcher();
-  if (quickSwitcher) quickSwitcher.style.display = 'inline-block';
-}
-
-
-if (btnInitDash) {
-  btnInitDash.addEventListener('click', () => {
-    // Start Fresh: clear current workspace name but don't delete stored configs
+if (btnExitWorkspace) {
+  btnExitWorkspace.addEventListener('click', () => {
     currentActiveWorkspace = '';
     localStorage.setItem('scandoc_workspace_name', '');
     document.getElementById('workspace-name').value = '';
     globalData = [];
-    if (typeof historicalData !== 'undefined') historicalData = [];
+    historicalData = [];
     processData();
     if (typeof renderHistoryTable === 'function') renderHistoryTable();
-    hideIntroScreen();
+    updateQuickSwitcher();
+    if (quickSwitcher) quickSwitcher.value = '';
+    renderAnalytics([]);
   });
 }
 
-if (btnResumeDash) {
-  btnResumeDash.addEventListener('click', () => {
-    // Resume using currentActiveWorkspace
-    const storedStr = localStorage.getItem('omnidash_config_' + currentActiveWorkspace);
-    if (storedStr) {
-      try { applyWorkspaceConfig(JSON.parse(storedStr), true); } catch(e) {}
-    }
-    hideIntroScreen();
-  });
+let currentActiveWorkspace = localStorage.getItem('scandoc_workspace_name') || '';
+
+// Auto-load workspace on startup
+if (currentActiveWorkspace) {
+  const storedStr = localStorage.getItem('omnidash_config_' + currentActiveWorkspace);
+  if (storedStr) {
+    try { applyWorkspaceConfig(JSON.parse(storedStr), true); } catch(e) {}
+  }
 }
 
-if (btnExitWorkspace) {
-  btnExitWorkspace.addEventListener('click', () => {
-    // Clear the screen data but don't delete history
-    globalData = [];
-    if (typeof historicalData !== 'undefined') historicalData = [];
-    processData();
-    if (typeof renderHistoryTable === 'function') renderHistoryTable();
-    initIntroScreen();
-  });
-}
+updateQuickSwitcher();
 
 function updateQuickSwitcher() {
   if (!quickSwitcher) return;
@@ -97,8 +56,6 @@ quickSwitcher.addEventListener('change', (e) => {
     currentActiveWorkspace = selected;
   } catch(err) { alert("Stored config is corrupt!"); }
 });
-
-initIntroScreen();
 
 let cloudSettings = JSON.parse(localStorage.getItem('scandoc_cloud')) || {
   active: 'google',
@@ -168,8 +125,10 @@ btnToggleView.addEventListener('click', () => {
 
 const btnImportModal = document.getElementById('btn-import-modal');
 const btnImportLocal = document.getElementById('btn-import-local');
+const btnImportJson = document.getElementById('btn-import-json');
 const btnImportCloud = document.getElementById('btn-import-cloud');
 const fileInput = document.getElementById('file-upload');
+const jsonInput = document.getElementById('json-upload');
 const schemaUploadInput = document.getElementById('schema-upload');
 const btnCloseImport = document.getElementById('btn-close-import');
 const btnSettings = document.getElementById('btn-settings');
@@ -202,6 +161,11 @@ tabBtns.forEach(btn => {
   });
 });
 
+function switchTab(targetId) {
+  const btn = document.querySelector(`.tab-btn[data-tab="${targetId}"]`);
+  if (btn) btn.click();
+}
+
 const btnExportSchemaConfig = document.getElementById('btn-export-schema-config');
 const btnLoadSchemaConfig = document.getElementById('btn-load-schema-config');
 const schemaConfigLoadInput = document.getElementById('schema-config-load');
@@ -219,10 +183,7 @@ const lastBackupDateSpan = document.getElementById('last-backup-date');
 let storedLastBackupDate = localStorage.getItem('scandoc_last_backup') || 'Never';
 if(lastBackupDateSpan) lastBackupDateSpan.innerText = 'Last Backup: ' + storedLastBackupDate;
 
-// For testing: hide intro screen so app opens directly to workspace
-if (typeof hideIntroScreen === 'function') {
-  try { hideIntroScreen(); } catch (e) { console.error('Failed to hide intro screen:', e); }
-}
+// (Intro screen intentionally removed)
 
 function renderSchemaEditor() {
   schemaBody.innerHTML = '';
@@ -616,11 +577,35 @@ btnImportModal.addEventListener('click', () => modalImport.classList.add('visibl
 btnCloseImport.addEventListener('click', () => modalImport.classList.remove('visible'));
 
 btnImportLocal.addEventListener('click', () => { fileInput.click(); modalImport.classList.remove('visible'); });
+btnImportJson.addEventListener('click', () => { jsonInput.click(); modalImport.classList.remove('visible'); });
 
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  Papa.parse(file, { header: true, skipEmptyLines: true, complete: function(results) { injectDataIntoGlobal(results.data); } });
+  Papa.parse(file, { header: true, skipEmptyLines: true, complete: function(results) { 
+    injectDataIntoGlobal(results.data); 
+    switchTab('tab-current');
+  } });
+  e.target.value = '';
+});
+
+jsonInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+      if (Array.isArray(data)) {
+        injectDataIntoGlobal(data);
+        switchTab('tab-current');
+      } else {
+        alert("JSON must be an array of objects.");
+      }
+    } catch(err) { alert("Failed to parse JSON."); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 });
 
 btnImportCloud.addEventListener('click', async () => {
@@ -649,6 +634,7 @@ btnImportCloud.addEventListener('click', async () => {
         parsedData.push(obj);
       }
       injectDataIntoGlobal(parsedData);
+      switchTab('tab-current');
     } catch (err) { alert("Error fetching from Google Drive: " + err.message); }
   } 
   else { alert(`${provider.toUpperCase()} provider assumes OAuth. This endpoint is stubbed for Demo.`); }

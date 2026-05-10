@@ -13,17 +13,16 @@
 
 </head>
 <body>
-
   <div style="position:fixed; bottom:15px; right:20px; color:#555; font-size:0.8rem; font-style:italic; z-index:100; pointer-events:none; letter-spacing: 1px;">Created by MysticTechs</div>
 
   <!-- Header -->
   <header class="navbar">
     <div class="logo">🌌 OmniDash</div>
     <div class="nav-controls" style="display: flex; align-items: center;">
-      <select id="quick-switcher" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0.4rem; margin-right: 10px; display: none;">
+      <select id="quick-switcher" style="background:var(--bg-color); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:0.4rem; margin-right: 10px;">
         <option value="">Switch Workspace...</option>
       </select>
-      <button class="nav-btn cancel" id="btn-exit-workspace" style="display: none; margin-right: 15px;">🚪 Exit</button>
+      <button class="nav-btn cancel" id="btn-exit-workspace" style="margin-right: 15px;">❌ Close</button>
       
       <div style="border-left: 1px solid var(--border-color); height: 25px; margin-right: 5px;"></div>
       
@@ -32,6 +31,7 @@
       <button class="nav-btn" id="btn-settings">⚙️ Settings</button>
       <button class="nav-btn" id="btn-placeholder" style="visibility: hidden;">ℹ️ About</button>
       <input type="file" id="file-upload" accept=".csv" style="display:none;" />
+      <input type="file" id="json-upload" accept=".json" style="display:none;" />
       <input type="file" id="schema-upload" accept=".csv" style="display:none;" />
     </div>
   </header>
@@ -89,8 +89,6 @@
             <div class="action-bar">
               <button class="action-btn-sm" id="btn-select-all">☑️ Select All</button>
               <button class="action-btn-sm" id="btn-clear">🔲 Clear</button>
-              <button class="action-btn-sm" id="btn-csv-export">📥 CSV</button>
-              <button class="action-btn-sm" id="btn-json-export">{ } JSON</button>
               <button class="action-btn-sm" id="btn-save-to-history" style="color: #58a6ff; border-color: #58a6ff; font-weight: bold;">💾 Save to History</button>
               <button class="action-btn-sm" id="btn-bulk-ignore" style="color: var(--warning-color); border-color: var(--warning-color);">🗑️ Ignore</button>
             </div>
@@ -137,6 +135,8 @@
             <div class="action-bar">
               <button class="action-btn-sm" id="btn-select-all-history">☑️ Select All</button>
               <button class="action-btn-sm" id="btn-clear-history">🔲 Clear</button>
+              <button class="action-btn-sm" id="btn-csv-export">📥 CSV</button>
+              <button class="action-btn-sm" id="btn-json-export">{ } JSON</button>
               <button class="action-btn-sm" id="btn-delete-history" style="color: var(--danger-color); border-color: var(--danger-color);">🗑️ Delete Selected</button>
             </div>
           </div>
@@ -178,7 +178,8 @@
       <h2>Select Data Source</h2>
       <p style="color: var(--text-secondary); margin-bottom: 20px;">Fetch your data from a local file or sync from the active cloud provider.</p>
       
-      <button class="action-btn" id="btn-import-local" style="margin-bottom: 15px;">📁 Load Local CSV</button>
+      <button class="action-btn" id="btn-import-local" style="margin-bottom: 5px;">📁 Load Local CSV</button>
+      <button class="action-btn" id="btn-import-json" style="margin-bottom: 15px;">📁 Load Local JSON</button>
       <button class="action-btn" id="btn-import-cloud" style="border-color: #2ea043; color: #2ea043;">☁️ Sync from Cloud</button>
 
       <div class="modal-actions" style="margin-top: 2rem;">
