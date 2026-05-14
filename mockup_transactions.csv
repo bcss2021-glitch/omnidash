@@ -1,0 +1,51 @@
+Transaction_ID,Date,Merchant,Category,Payment_Method,Employee,Quantity,Unit_Price,Subtotal,Tax_Amount,Tip_Amount,Discount,Total_Amount,Status,Notes
+TXN-10003,01/06/2024,Apple Store,Food & Drink,Visa,Tom R.,4,72.6,290.4,20.33,0,0.0,310.73,Completed,One-time purchase
+TXN-10027,01/07/2024,Shell Gas Station,Food & Drink,Cash,John D.,5,51.32,256.61,25.66,0.0,0,282.27,Completed,Monthly subscription
+TXN-10048,01/17/2024,Whole Foods Market,Utilities,Cash,Ana P.,9,17.0,152.96,13.77,22.94,15.3,174.37,Refunded,Regular purchase
+TXN-10031,01/23/2024,CVS Pharmacy,Office,Mastercard,John D.,9,38.05,342.45,23.97,68.49,0.0,434.91,Completed,
+TXN-10020,01/28/2024,CVS Pharmacy,Travel,Debit,John D.,3,83.59,250.77,25.08,0,0,275.85,Completed,Regular purchase
+TXN-10023,02/01/2024,Home Depot,Utilities,Visa,Ana P.,11,33.22,365.43,21.93,0,0.0,387.36,Completed,Loyalty discount applied
+TXN-10017,02/08/2024,Lyft,Office,Debit,John D.,12,16.63,199.51,15.96,0,0.0,215.47,Completed,
+TXN-10030,02/10/2024,CVS Pharmacy,Shopping,Visa,Sara L.,3,119.86,359.59,25.17,0,0.0,384.76,Completed,
+TXN-10049,02/14/2024,Apple Store,Transportation,Debit,Sara L.,7,35.33,247.28,17.31,0,0.0,264.59,Completed,
+TXN-10010,02/18/2024,CVS Pharmacy,Office,Visa,Tom R.,11,26.3,289.27,17.36,0.0,0.0,306.63,Completed,Loyalty discount applied
+TXN-10002,02/19/2024,Marriott Hotels,Utilities,Mastercard,Tom R.,11,8.16,89.72,8.97,16.15,0.0,114.84,Pending,Monthly subscription
+TXN-10019,02/27/2024,McDonald's,Transportation,Visa,Tom R.,5,20.18,100.88,7.06,0,0.0,107.94,Pending,Expense reimbursable
+TXN-10038,03/08/2024,Marriott Hotels,Groceries,Amex,Sara L.,7,11.4,79.77,7.18,0,5.0,81.95,Completed,Bulk order
+TXN-10025,03/10/2024,Lyft,Food & Drink,Visa,Ana P.,10,25.8,258.03,20.64,0,0.0,278.67,Completed,Price matched
+TXN-10012,03/23/2024,Chipotle,Dining,Cash,John D.,2,88.53,177.06,14.16,0,0.0,191.22,Completed,One-time purchase
+TXN-10013,03/25/2024,Shell Gas Station,Health,Amex,John D.,1,208.88,208.88,20.89,37.6,0.0,267.37,Completed,Office supplies
+TXN-10007,03/26/2024,Apple Store,Groceries,Mastercard,Lisa K.,11,16.38,180.23,14.42,36.05,0,230.7,Completed,
+TXN-10021,03/27/2024,CVS Pharmacy,Dining,Debit,John D.,5,29.86,149.29,13.44,0.0,10.0,152.73,Completed,Monthly subscription
+TXN-10032,04/02/2024,Home Depot,Entertainment,Mastercard,Lisa K.,11,30.54,335.95,20.16,0.0,10.0,346.11,Refunded,Expense reimbursable
+TXN-10035,04/03/2024,Apple Store,Utilities,Cash,Ana P.,6,37.37,224.19,17.94,0.0,0.0,242.13,Completed,Bulk order
+TXN-10022,04/23/2024,Lyft,Travel,Cash,Lisa K.,1,368.38,368.38,36.84,0,0,405.22,Pending,Client entertainment
+TXN-10016,04/27/2024,Amazon,Groceries,Mastercard,Maria G.,1,32.29,32.29,1.94,0,0.0,34.23,Completed,One-time purchase
+TXN-10009,05/08/2024,Costco,Health,Mastercard,John D.,10,28.53,285.26,28.53,0.0,0.0,313.79,Pending,Rush delivery
+TXN-10044,05/08/2024,Walgreens,Travel,Visa,Mike S.,4,80.13,320.51,25.64,57.69,0.0,403.84,Completed,Office supplies
+TXN-10026,05/17/2024,McDonald's,Dining,Amex,Ana P.,3,19.24,57.71,4.62,0,0.0,62.33,Refunded,Price matched
+TXN-10045,05/21/2024,Target,Transportation,Visa,Tom R.,7,19.04,133.27,13.33,0.0,0.0,146.6,Completed,One-time purchase
+TXN-10029,05/23/2024,McDonald's,Dining,Debit,Ana P.,12,2.07,24.88,1.99,4.98,0,31.85,Completed,Expense reimbursable
+TXN-10047,06/03/2024,Home Depot,Travel,Mastercard,Sara L.,10,28.84,288.42,25.96,57.68,0.0,372.06,Completed,Rush delivery
+TXN-10008,06/12/2024,Spotify,Utilities,Debit,John D.,4,39.38,157.53,9.45,0.0,5.0,161.98,Completed,Client entertainment
+TXN-10004,06/27/2024,Amazon,Dining,Amex,Lisa K.,7,33.25,232.78,13.97,41.9,0.0,288.65,Refunded,Loyalty discount applied
+TXN-10005,07/06/2024,Amazon,Transportation,Visa,Tom R.,5,44.6,222.99,13.38,0.0,0.0,236.37,Completed,Rush delivery
+TXN-10050,07/15/2024,Marriott Hotels,Groceries,Amex,John D.,1,111.87,111.87,10.07,0.0,0.0,121.94,Refunded,Expense reimbursable
+TXN-10033,07/16/2024,Chipotle,Transportation,Mastercard,Maria G.,6,55.42,332.51,29.93,0.0,10.0,352.44,Refunded,Office supplies
+TXN-10034,07/25/2024,Costco,Dining,Amex,Maria G.,9,14.49,130.45,7.83,0,0.0,138.28,Completed,Monthly subscription
+TXN-10018,07/29/2024,Starbucks,Food & Drink,Visa,Tom R.,8,9.9,79.24,4.75,0,0.0,83.99,Refunded,One-time purchase
+TXN-10041,08/02/2024,Home Depot,Shopping,Visa,Lisa K.,7,48.24,337.7,33.77,0.0,10.0,361.47,Completed,
+TXN-10042,08/07/2024,McDonald's,Shopping,Debit,Mike S.,2,44.9,89.8,8.98,16.16,0.0,114.94,Pending,Price matched
+TXN-10011,08/29/2024,Marriott Hotels,Entertainment,Amex,Maria G.,11,18.64,205.07,20.51,0,0,225.58,Completed,Bulk order
+TXN-10046,10/06/2024,Whole Foods Market,Office,Debit,Tom R.,10,18.16,181.59,10.9,0.0,0.0,192.49,Completed,One-time purchase
+TXN-10014,10/19/2024,Target,Travel,Cash,John D.,3,120.1,360.29,21.62,0,36.03,345.88,Completed,Price matched
+TXN-10036,10/24/2024,Netflix,Health,Debit,Maria G.,9,8.79,79.11,4.75,0,0.0,83.86,Refunded,One-time purchase
+TXN-10039,10/25/2024,Uber Eats,Food & Drink,Amex,Ana P.,8,29.23,233.87,18.71,35.08,23.39,264.27,Refunded,
+TXN-10024,11/02/2024,Walgreens,Transportation,Amex,John D.,6,3.88,23.26,1.4,4.19,0.0,28.85,Completed,Bulk order
+TXN-10043,11/02/2024,McDonald's,Shopping,Debit,Tom R.,9,14.04,126.38,11.37,25.28,10.0,153.03,Completed,
+TXN-10028,11/07/2024,Spotify,Entertainment,Visa,Maria G.,9,9.64,86.75,6.94,0.0,5.0,88.69,Refunded,Bulk order
+TXN-10015,11/08/2024,Best Buy,Travel,Cash,Tom R.,7,23.67,165.7,11.6,33.14,5.0,205.44,Completed,Office supplies
+TXN-10040,11/15/2024,Starbucks,Transportation,Debit,Ana P.,1,133.02,133.02,9.31,0,0,142.33,Completed,Rush delivery
+TXN-10037,11/17/2024,CVS Pharmacy,Health,Debit,Mike S.,11,11.37,125.12,7.51,0,0.0,132.63,Completed,Price matched
+TXN-10006,11/23/2024,Amazon,Office,Mastercard,Ana P.,5,63.67,318.37,22.29,0.0,0.0,340.66,Refunded,Office supplies
+TXN-10001,11/25/2024,Marriott Hotels,Food & Drink,Cash,Tom R.,2,24.93,49.86,3.99,0.0,0.0,53.85,Completed,Regular purchase
